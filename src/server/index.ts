@@ -12,7 +12,30 @@ setTimeout(() => {
   networkState.setWorldName('Artimes')
 }, 4250)
 
+setTimeout(() => {
+  networkState.addEntity({
+    id: 'alpha',
+    position: {
+      x: 200,
+      y: 100,
+    },
+  })
+}, 5000)
+setTimeout(() => {
+  networkState.addEntity({
+    id: 'bravo',
+    position: {
+      x: -200,
+      y: 100,
+    },
+  })
+}, 8000)
+setTimeout(() => {
+  networkState.removeEntity('alpha')
+}, 12000)
+
 setInterval(() => {
+  networkState.moveEntity('bravo', 25, 0)
   sendDeltaState(network, networkState)
 }, 1000)
 

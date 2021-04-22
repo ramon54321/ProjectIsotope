@@ -15,14 +15,34 @@ export function Serializable() {
 }
 
 export function deserialize<T>(json: string): T {
-  const obj = JSON.parse(json)
+  const obj = JSON.parse(json, reviver)
   return assignType(obj) as T
 }
 
 export function serialize(obj: object): string {
-  const json = JSON.stringify(obj)
+  const json = JSON.stringify(obj, replacer)
   if (!isSerializable(obj)) throw new Error(`Serialization: No type property on ${json}`)
   return json
+}
+
+function replacer(key: any, value: any) {
+  if (value instanceof Map) {
+    return {
+      dataType: 'Map',
+      value: Array.from(value.entries()),
+    }
+  } else {
+    return value
+  }
+}
+
+function reviver(key: any, value: any) {
+  if (typeof value === 'object' && value !== null) {
+    if (value.dataType === 'Map') {
+      return new Map(value.value)
+    }
+  }
+  return value
 }
 
 function assignType(obj: any): any {

@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js'
+import { DirtRegistry } from '../../shared/engine/dirt-registry'
 import { Vec2 } from '../../shared/engine/math'
 import { NetworkState } from '../../shared/game/network-state'
 import { addCircle } from './circle'
@@ -72,8 +73,11 @@ export class Graphics {
   private readonly ui: any = {}
   private readonly input = new Input()
   private readonly camera = new Camera(this.input)
+  private readonly entitiesRegistry = new DirtRegistry()
+  private readonly entitiesMap = new Map<string, PIXI.Graphics>()
   constructor(networkState: NetworkState) {
     this.networkState = networkState
+    PIXI.utils.skipHello()
     this.app = new PIXI.Application({
       autoDensity: true,
       resolution: 2,
@@ -108,6 +112,39 @@ export class Graphics {
     this.ui.origin.position.set(-cameraPosition.x, -cameraPosition.y)
     this.ui.originVertical.position.x = -cameraPosition.x
     this.ui.originHorizontal.position.y = -cameraPosition.y
+    this.entitiesRegistry.update(
+      this.networkState.getEntities(),
+      entity => this.createEntity(entity, cameraPosition),
+      id => this.destroyEntity(id),
+      entity => this.updateEntity(entity, cameraPosition),
+    )
+  }
+  private createEntity(entity: any, cameraPosition: Vec2) {
+    const graphics = addCircle(this.app, entity.position.x - cameraPosition.x, entity.position.y - cameraPosition.y, 8) as any
+    graphics.lastPosition = {
+      x: entity.position.x,
+      y: entity.position.y,
+    }
+    this.entitiesMap.set(entity.id, graphics)
+  }
+  private destroyEntity(id: string) {
+    const graphics = this.entitiesMap.get(id)
+    if (!graphics) {
+      throw new Error('Graphics can not be removed... this should not be possible')
+    }
+    this.app.stage.removeChild(graphics)
+    this.entitiesMap.delete(id)
+  }
+  private updateEntity(entity: any, cameraPosition: Vec2) {
+    const graphics = this.entitiesMap.get(entity.id) as any
+    if (!graphics) {
+      throw new Error('Graphics can not be removed... this should not be possible')
+    }
+    const dx = entity.position.x - graphics.lastPosition.x
+    const dy = entity.position.y - graphics.lastPosition.y
+    graphics.lastPosition.x = graphics.lastPosition.x + dx / 8
+    graphics.lastPosition.y = graphics.lastPosition.y + dy / 8
+    graphics.position.set(graphics.lastPosition.x - cameraPosition.x, graphics.lastPosition.y - cameraPosition.y)
   }
   private setStageCenter() {
     this.app.stage.position.set(HALF_WIDTH, HALF_HEIGHT)
