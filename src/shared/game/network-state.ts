@@ -8,4 +8,7 @@ export class NetworkState extends State {
   setWorldName(value: string) {
     this.worldName = value
   }
+  getWorldName(): string {
+    return this.worldName
+  }
 }

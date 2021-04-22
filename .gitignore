@@ -3,3 +3,4 @@ dist
 tsconfig.tsbuildinfo
 .DS_Store
 README.pdf
+res
