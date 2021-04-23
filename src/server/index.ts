@@ -5,9 +5,10 @@ import { Vec2 } from '../shared/engine/math'
 
 const network = new NetServer(8081)
 const networkState = new NetworkState('WRITER')
+const actionPayloadQueue: any[] = []
 
 network.on('connect', (connection: Connection) => sendFullState(network, connection, networkState))
-network.on('action', action => console.log(action))
+network.on('action', payload => {console.log(payload); actionPayloadQueue.push(payload)})
 
 setTimeout(() => {
   networkState.setWorldName('Artimes')
@@ -27,19 +28,22 @@ setTimeout(() => {
     position: new Vec2(-200, 100),
   })
 }, 6000)
-setTimeout(() => {
-  networkState.removeEntity('alpha')
-}, 12000)
 
 const target = new Vec2(0, 0)
-const setRandomTarget = () => {
-  target.x = -300 + Math.random() * 600
-  target.y = -300 + Math.random() * 600
-  setTimeout(setRandomTarget, 8 + Math.random() * 6000)
-}
-setTimeout(setRandomTarget, 1000)
 
 setInterval(() => {
+  let actionPayload = actionPayloadQueue.shift()
+  while(actionPayload) {
+    if (actionPayload.action === 'move') {
+      const e = networkState.getEntity(actionPayload.entityId)
+      if (e) {
+        target.x = actionPayload.target.x
+        target.y = actionPayload.target.y
+      }
+    }
+    actionPayload = actionPayloadQueue.shift()
+  }
+
   const e = networkState.getEntity('bravo')
   if (e) {
     const direction = e.position.directionTo(target)

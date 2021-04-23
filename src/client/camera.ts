@@ -1,5 +1,5 @@
 import { Vec2 } from '../shared/engine/math'
-import { Input } from './input'
+import { Input } from './drawing/input'
 
 export class Camera {
   private readonly input: Input

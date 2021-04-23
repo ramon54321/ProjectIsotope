@@ -6,13 +6,11 @@ import { addCircle } from './circle'
 import { addRect } from './rectangle'
 import { addLine } from './line'
 import { addTextLive } from './text'
-import { Input } from '../input'
+import { Input } from './input'
 import { Camera } from '../camera'
-
-const WIDTH = window.innerWidth
-const HEIGHT = window.innerHeight
-const HALF_WIDTH = WIDTH / 2
-const HALF_HEIGHT = HEIGHT / 2
+import EventEmitter from 'events'
+import { HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
+import { Actions } from '../actions'
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
@@ -35,17 +33,42 @@ class EntityLibrary {
   }
 }
 
+class Selection {
+  private selectedEntity: NSEntity | undefined
+  private readonly events = new EventEmitter()
+  getEventEmitter(): EventEmitter {
+    return this.events
+  }
+  getSelectedEntity(): NSEntity | undefined {
+    return this.selectedEntity
+  }
+  setSelectedEntity(entity: NSEntity) {
+    this.selectedEntity = entity
+    this.events.emit('entity')
+    this.events.emit('entity-set')
+  }
+  clearSelectedEntity() {
+    this.selectedEntity = undefined
+    this.events.emit('entity')
+    this.events.emit('entity-clear')
+  }
+}
+
 export class Graphics {
-  private readonly app: PIXI.Application
   private readonly networkState: NetworkState
+  private readonly actions: Actions
+
+  private readonly app: PIXI.Application
   private readonly ui: any = {}
   private readonly input = new Input()
   private camera!: Camera
   private readonly entitiesRegistry = new DirtRegistry()
   private readonly entitiesMap = new Map<string, PIXI.Graphics>()
+  private readonly selection = new Selection()
 
-  constructor(networkState: NetworkState) {
+  constructor(networkState: NetworkState, actions: Actions) {
     this.networkState = networkState
+    this.actions = actions
     PIXI.utils.skipHello()
     this.app = new PIXI.Application({
       autoDensity: true,
@@ -61,10 +84,12 @@ export class Graphics {
   start() {
     this.setStageCenter()
     this.createCamera()
+    this.createInput()
     this.createBackground()
     this.createOriginMarkers()
     this.createUI()
     this.createEntities()
+    this.app.ticker.add(() => this.input.reset())
   }
 
   private setStageCenter() {
@@ -74,10 +99,20 @@ export class Graphics {
     this.camera = new Camera(this.input)
     this.app.ticker.add(delta => this.camera.render(delta))
   }
+  private createInput() {
+    this.app.ticker.add(() => {
+      const selectedEntity = this.selection.getSelectedEntity()
+      const cameraPosition = this.camera.getPosition()
+      if (selectedEntity && this.input.getInputOnce('m')) {
+        const worldPosition = this.input.getMouseWorldPosition(this.app, cameraPosition)
+        this.actions.moveEntity(selectedEntity.id, worldPosition)
+      }
+    })
+  }
   private createBackground() {
     this.ui.background = addRect(this.app, 0, 0, WIDTH, HEIGHT)
     this.ui.background.interactive = true
-    this.ui.background.on('mouseup', () => console.log('Mouse Up on stage'))
+    this.ui.background.on('mouseup', () => this.selection.clearSelectedEntity())
   }
   private createOriginMarkers() {
     this.ui.origin = addCircle(this.app, 0, 0, 8)
@@ -100,12 +135,21 @@ export class Graphics {
       -HALF_HEIGHT + PADDING_TOP,
       0,
     )
+    this.ui.worldName = addTextLive(
+      this.app,
+      this.selection.getEventEmitter(),
+      'entity',
+      () => this.selection.getSelectedEntity()?.id || 'None',
+      -HALF_WIDTH + PADDING_LEFT,
+      -HALF_HEIGHT + PADDING_TOP + 16 * 1,
+      0,
+    )
   }
   private createEntities() {
     const createEntity = (entity: NSEntity, cameraPosition: Vec2) => {
       const graphics = EntityLibrary.getGraphics(this.app, entity) as any
       graphics.interactive = true
-      graphics.on('mouseup', () => console.log(entity.id, 'Mouse Up'))
+      graphics.on('mouseup', () => this.selection.setSelectedEntity(entity))
       graphics.position.set(entity.position.x - cameraPosition.x, entity.position.y - cameraPosition.y)
       graphics.lastPosition = {
         x: entity.position.x,
