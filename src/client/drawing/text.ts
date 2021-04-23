@@ -1,5 +1,5 @@
+import EventEmitter from 'events'
 import * as PIXI from 'pixi.js'
-import { NetworkState } from '../../shared/game/network-state'
 
 const FONT_SIZE = 10
 const TEXT_STYLE = new PIXI.TextStyle({
@@ -20,14 +20,14 @@ export function addText(app: PIXI.Application, text: string, x: number, y: numbe
 
 export function addTextLive(
   app: PIXI.Application,
-  networkState: NetworkState,
-  trigger: string,
+  eventEmitter: EventEmitter,
+  event: string,
   update: () => string,
   x: number,
   y: number,
   anchorX: number = 0.5,
 ) {
   const message = addText(app, update(), x, y, anchorX)
-  networkState.on(trigger, () => (message.text = update()))
+  eventEmitter.on(event, () => (message.text = update()))
   return message
 }

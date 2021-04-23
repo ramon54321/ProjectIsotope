@@ -1,0 +1,26 @@
+import { Vec2 } from '../shared/engine/math'
+import { Input } from './input'
+
+export class Camera {
+  private readonly input: Input
+  private x: number = 0
+  private y: number = 0
+  constructor(input: Input) {
+    this.input = input
+  }
+  render(delta: number) {
+    if (this.input.getInputDown('a')) {
+      this.x -= 16 * delta
+    } else if (this.input.getInputDown('d')) {
+      this.x += 16 * delta
+    }
+    if (this.input.getInputDown('w')) {
+      this.y -= 16 * delta
+    } else if (this.input.getInputDown('s')) {
+      this.y += 16 * delta
+    }
+  }
+  getPosition(): Vec2 {
+    return { x: this.x, y: this.y }
+  }
+}

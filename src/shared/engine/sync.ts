@@ -35,6 +35,9 @@ export class State {
   clearActions() {
     this.#syncStateActions.length = 0
   }
+  getEventEmitter(): EventEmitter {
+    return this.#events
+  }
   update() {
     State.eventTriggers.forEach(event => this.#events.emit(event))
   }

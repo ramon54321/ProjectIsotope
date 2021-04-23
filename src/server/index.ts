@@ -10,7 +10,7 @@ network.on('action', action => console.log(action))
 
 setTimeout(() => {
   networkState.setWorldName('Artimes')
-}, 4250)
+}, 2250)
 
 setTimeout(() => {
   networkState.addEntity({
@@ -20,7 +20,7 @@ setTimeout(() => {
       y: 100,
     },
   })
-}, 5000)
+}, 3000)
 setTimeout(() => {
   networkState.addEntity({
     id: 'bravo',
@@ -29,15 +29,15 @@ setTimeout(() => {
       y: 100,
     },
   })
-}, 8000)
+}, 6000)
 setTimeout(() => {
   networkState.removeEntity('alpha')
 }, 12000)
 
 setInterval(() => {
-  networkState.moveEntity('bravo', 25, 0)
+  networkState.moveEntity('bravo', 5, 0)
   sendDeltaState(network, networkState)
-}, 1000)
+}, 200)
 
 function sendFullState(network: NetServer, connection: Connection, state: any) {
   const message = {
