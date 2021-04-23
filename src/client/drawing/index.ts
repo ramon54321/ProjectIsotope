@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { DirtRegistry } from '../../shared/engine/dirt-registry'
 import { Vec2 } from '../../shared/engine/math'
-import { NetworkState } from '../../shared/game/network-state'
+import { NSEntity, NetworkState } from '../../shared/game/network-state'
 import { addCircle } from './circle'
 import { addRect } from './rectangle'
 import { addLine } from './line'
@@ -16,6 +16,24 @@ const HALF_HEIGHT = HEIGHT / 2
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
+
+class EntityLibrary {
+  static getGraphics(app: PIXI.Application, entity: NSEntity) {
+    if (entity.kind === 'dummy') {
+      return addCircle(app, 0, 0, 8)
+    } else {
+      const body = new PIXI.Sprite(app.loader.resources['res/body1.png'].texture)
+      body.anchor.set(0.5, 0.5)
+      body.scale.set(0.5, 0.5)
+      const head = new PIXI.Sprite(app.loader.resources['res/body1_head.png'].texture)
+      head.anchor.set(0.55, 0.85)
+      head.scale.set(1.25, 1.25)
+      body.addChild(head)
+      app.stage.addChild(body)
+      return body
+    }
+  }
+}
 
 export class Graphics {
   private readonly app: PIXI.Application
@@ -37,7 +55,7 @@ export class Graphics {
       height: HEIGHT,
     })
     document.body.appendChild(this.app.view)
-    this.app.loader.add('', 'res/insta.png').load(() => this.start())
+    this.app.loader.add(['res/body1.png', 'res/body1_head.png']).load(() => this.start())
   }
 
   start() {
@@ -84,10 +102,11 @@ export class Graphics {
     )
   }
   private createEntities() {
-    const createEntity = (entity: any, cameraPosition: Vec2) => {
-      const graphics = addCircle(this.app, entity.position.x - cameraPosition.x, entity.position.y - cameraPosition.y, 8) as any
+    const createEntity = (entity: NSEntity, cameraPosition: Vec2) => {
+      const graphics = EntityLibrary.getGraphics(this.app, entity) as any
       graphics.interactive = true
       graphics.on('mouseup', () => console.log(entity.id, 'Mouse Up'))
+      graphics.position.set(entity.position.x - cameraPosition.x, entity.position.y - cameraPosition.y)
       graphics.lastPosition = {
         x: entity.position.x,
         y: entity.position.y,
@@ -102,7 +121,7 @@ export class Graphics {
       this.app.stage.removeChild(graphics)
       this.entitiesMap.delete(id)
     }
-    const updateEntity = (entity: any, cameraPosition: Vec2) => {
+    const updateEntity = (entity: NSEntity, cameraPosition: Vec2) => {
       const graphics = this.entitiesMap.get(entity.id) as any
       if (!graphics) {
         throw new Error('Graphics can not be removed... this should not be possible')
@@ -111,6 +130,7 @@ export class Graphics {
       const dy = entity.position.y - graphics.lastPosition.y
       graphics.lastPosition.x = graphics.lastPosition.x + dx / 16
       graphics.lastPosition.y = graphics.lastPosition.y + dy / 16
+      graphics.scale.x = dx < 0 ? Math.abs(graphics.scale.x) : -Math.abs(graphics.scale.x)
       graphics.position.set(graphics.lastPosition.x - cameraPosition.x, graphics.lastPosition.y - cameraPosition.y)
     }
     this.app.ticker.add(delta => {

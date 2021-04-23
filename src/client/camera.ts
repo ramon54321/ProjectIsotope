@@ -21,6 +21,6 @@ export class Camera {
     }
   }
   getPosition(): Vec2 {
-    return { x: this.x, y: this.y }
+    return new Vec2(this.x, this.y)
   }
 }

@@ -1,3 +1,4 @@
+import { Vec2 } from '../engine/math'
 import { Serializable } from '../engine/serialization'
 import { Pushable, State } from '../engine/sync'
 
@@ -11,19 +12,19 @@ export class NetworkState extends State {
   getWorldName(): string {
     return this.worldName
   }
-  private entities = new Map<string, any>()
+  private entities = new Map<string, NSEntity>()
   @Pushable()
-  addEntity(entity: any) {
+  addEntity(entity: NSEntity) {
     this.entities.set(entity.id, entity)
   }
   @Pushable()
   removeEntity(id: string) {
     this.entities.delete(id)
   }
-  getEntities(): any[] {
+  getEntities(): NSEntity[] {
     return Array.from(this.entities.values())
   }
-  getEntity(id: string): any | undefined {
+  getEntity(id: string): NSEntity | undefined {
     return this.entities.get(id)
   }
   @Pushable()
@@ -52,4 +53,10 @@ export class NetworkState extends State {
     entity.position.x += dx
     entity.position.y += dy
   }
+}
+
+export interface NSEntity {
+  id: string
+  kind: string
+  position: Vec2
 }
