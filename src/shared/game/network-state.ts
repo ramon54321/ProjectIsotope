@@ -12,6 +12,14 @@ export class NetworkState extends State {
   getWorldName(): string {
     return this.worldName
   }
+  private serverTickRate: number = 1
+  @Pushable()
+  setServerTickRate(value: number) {
+    this.serverTickRate = value
+  }
+  getServerTickRate(): number {
+    return this.serverTickRate
+  }
   private entities = new Map<string, NSEntity>()
   @Pushable()
   addEntity(entity: NSEntity) {

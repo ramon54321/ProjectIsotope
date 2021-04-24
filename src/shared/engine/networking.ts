@@ -3,12 +3,18 @@ import * as http from 'http'
 import { EventEmitter } from 'events'
 
 export class NetClient extends EventEmitter {
-  private readonly socket: WebSocket.client
+  private readonly host: string
+  private readonly port: number
+  private socket!: WebSocket.client
   private connection?: WebSocket.connection
   constructor(host: string, port: number) {
     super()
+    this.host = host
+    this.port = port
+  }
+  open() {
     this.socket = new WebSocket.client()
-    this.socket.connect(`ws://${host}:${port}/`)
+    this.socket.connect(`ws://${this.host}:${this.port}/`)
     this.socket.on('connect', connection => {
       this.connection = connection
       connection.on('message', messageJSON => {
@@ -27,12 +33,16 @@ export class NetClient extends EventEmitter {
 }
 
 export class NetServer extends EventEmitter {
-  private httpServer: http.Server
-  private server: WebSocket.server
+  private readonly port: number
+  private httpServer!: http.Server
+  private server!: WebSocket.server
   constructor(port: number) {
     super()
+    this.port = port
+  }
+  open() {
     this.httpServer = http.createServer()
-    this.httpServer.listen(port)
+    this.httpServer.listen(this.port)
     this.server = new WebSocket.server({
       httpServer: this.httpServer,
       autoAcceptConnections: true,

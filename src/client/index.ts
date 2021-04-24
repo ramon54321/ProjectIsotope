@@ -9,9 +9,16 @@ const network = new NetClient('localhost', 8081)
 const networkState = new NetworkState('READER')
 const actions = new Actions(network)
 const graphics = new Graphics(networkState, actions)
+network.open()
 
-network.on('deltaState', payload => payload.actions.forEach((action: any) => networkState.applyAction(action)))
+network.on('deltaState', payload => {
+  graphics.beforeTick()
+  payload.actions.forEach((action: any) => networkState.applyAction(action))
+  graphics.afterTick()
+})
 network.on('fullState', payload => {
+  graphics.beforeTick()
   replaceObject(networkState, deserialize(payload.state))
   networkState.update()
+  graphics.afterTick()
 })

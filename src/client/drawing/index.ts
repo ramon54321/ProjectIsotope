@@ -54,6 +54,16 @@ class Selection {
   }
 }
 
+class Timer {
+  private time = Date.now()
+  lap() {
+    this.time = Date.now()
+  }
+  getLapTime(): number {
+    return Date.now() - this.time
+  }
+}
+
 export class Graphics {
   private readonly networkState: NetworkState
   private readonly actions: Actions
@@ -65,6 +75,7 @@ export class Graphics {
   private readonly entitiesRegistry = new DirtRegistry()
   private readonly entitiesMap = new Map<string, PIXI.Graphics>()
   private readonly selection = new Selection()
+  private readonly tickTimer = new Timer()
 
   constructor(networkState: NetworkState, actions: Actions) {
     this.networkState = networkState
@@ -90,6 +101,25 @@ export class Graphics {
     this.createUI()
     this.createEntities()
     this.app.ticker.add(() => this.input.reset())
+  }
+
+  beforeTick() {
+    this.tickTimer.lap()
+    this.entitiesMap.forEach((graphics: any, entityId: string) => {
+      const e = this.networkState.getEntity(entityId)
+      if (e === undefined) return
+      graphics.lastPosition = new Vec2(e.position.x, e.position.y)
+    })
+  }
+  afterTick() {
+    this.entitiesMap.forEach((graphics: any, entityId: string) => {
+      const e = this.networkState.getEntity(entityId)
+      if (e === undefined) {
+        console.log('ERR')
+        return
+      }
+      graphics.velocity = graphics.lastPosition.differenceTo(e.position)
+    })
   }
 
   private setStageCenter() {
@@ -151,10 +181,8 @@ export class Graphics {
       graphics.interactive = true
       graphics.on('mouseup', () => this.selection.setSelectedEntity(entity))
       graphics.position.set(entity.position.x - cameraPosition.x, entity.position.y - cameraPosition.y)
-      graphics.lastPosition = {
-        x: entity.position.x,
-        y: entity.position.y,
-      }
+      graphics.lastPosition = new Vec2(entity.position.x, entity.position.y)
+      graphics.velocity = new Vec2(0, 0)
       this.entitiesMap.set(entity.id, graphics)
     }
     const destroyEntity = (id: string) => {
@@ -165,25 +193,24 @@ export class Graphics {
       this.app.stage.removeChild(graphics)
       this.entitiesMap.delete(id)
     }
-    const updateEntity = (entity: NSEntity, cameraPosition: Vec2) => {
+    const updateEntity = (delta: number, entity: NSEntity, cameraPosition: Vec2, tickInterpolation: number) => {
       const graphics = this.entitiesMap.get(entity.id) as any
       if (!graphics) {
         throw new Error('Graphics can not be removed... this should not be possible')
       }
-      const dx = entity.position.x - graphics.lastPosition.x
-      const dy = entity.position.y - graphics.lastPosition.y
-      graphics.lastPosition.x = graphics.lastPosition.x + dx / 16
-      graphics.lastPosition.y = graphics.lastPosition.y + dy / 16
-      graphics.scale.x = dx < 0 ? Math.abs(graphics.scale.x) : -Math.abs(graphics.scale.x)
-      graphics.position.set(graphics.lastPosition.x - cameraPosition.x, graphics.lastPosition.y - cameraPosition.y)
+      const movement = graphics.velocity.scale(tickInterpolation)
+      const position = new Vec2(graphics.lastPosition.x + movement.x, graphics.lastPosition.y + movement.y)
+      graphics.position.set(position.x - cameraPosition.x, position.y - cameraPosition.y)
     }
     this.app.ticker.add(delta => {
       const cameraPosition = this.camera.getPosition()
+      const timeSinceLastTick = this.tickTimer.getLapTime()
+      const tickInterpolation = (timeSinceLastTick * 5) / 1000
       this.entitiesRegistry.update(
         this.networkState.getEntities(),
         entity => createEntity(entity, cameraPosition),
         id => destroyEntity(id),
-        entity => updateEntity(entity, cameraPosition),
+        entity => updateEntity(delta, entity, cameraPosition, tickInterpolation),
       )
     })
   }

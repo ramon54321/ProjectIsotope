@@ -3,12 +3,20 @@ import { NetworkState } from '../shared/game/network-state'
 import { serialize } from '../shared/engine/serialization'
 import { Vec2 } from '../shared/engine/math'
 
+const TICK_RATE = 5
+
 const network = new NetServer(8081)
 const networkState = new NetworkState('WRITER')
 const actionPayloadQueue: any[] = []
+network.open()
 
 network.on('connect', (connection: Connection) => sendFullState(network, connection, networkState))
-network.on('action', payload => {console.log(payload); actionPayloadQueue.push(payload)})
+network.on('action', payload => {
+  console.log(payload)
+  actionPayloadQueue.push(payload)
+})
+
+networkState.setServerTickRate(TICK_RATE)
 
 setTimeout(() => {
   networkState.setWorldName('Artimes')
@@ -33,7 +41,7 @@ const target = new Vec2(0, 0)
 
 setInterval(() => {
   let actionPayload = actionPayloadQueue.shift()
-  while(actionPayload) {
+  while (actionPayload) {
     if (actionPayload.action === 'move') {
       const e = networkState.getEntity(actionPayload.entityId)
       if (e) {
@@ -46,11 +54,15 @@ setInterval(() => {
 
   const e = networkState.getEntity('bravo')
   if (e) {
-    const direction = e.position.directionTo(target)
-    networkState.moveEntity('bravo', direction.x * 15, direction.y * 15)
+    const difference = e.position.differenceTo(target)
+    const magnitude = difference.magnitude()
+    const speed = 50
+    const tickMovementDistance = speed / networkState.getServerTickRate()
+    const movement = magnitude < tickMovementDistance ? difference : difference.normalized().scale(tickMovementDistance)
+    networkState.moveEntity(e.id, movement.x, movement.y)
   }
   sendDeltaState(network, networkState)
-}, 200)
+}, 1000 / networkState.getServerTickRate())
 
 function sendFullState(network: NetServer, connection: Connection, state: any) {
   const message = {
