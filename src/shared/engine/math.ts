@@ -5,6 +5,9 @@ export class Vec2 {
     this.x = x
     this.y = y
   }
+  copy(): Vec2 {
+    return new Vec2(this.x, this.y)
+  }
   differenceTo(target: Vec2): Vec2 {
     const dx = target.x - this.x
     const dy = target.y - this.y
