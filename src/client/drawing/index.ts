@@ -83,11 +83,7 @@ export class Graphics {
   }
   afterTick() {
     this.entitiesMap.forEach((graphics: any, entityId: string) => {
-      const e = this.networkState.getEntity(entityId)
-      if (e === undefined) {
-        console.log('ERR')
-        return
-      }
+      const e = this.networkState.getEntity(entityId)!
       graphics.velocity = graphics.lastPosition.differenceTo(e.position)
     })
   }
