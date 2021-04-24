@@ -11,12 +11,14 @@ export class Camera {
   render(delta: number) {
     if (this.input.getInputDown('a')) {
       this.x -= 16 * delta
-    } else if (this.input.getInputDown('d')) {
+    }
+    if (this.input.getInputDown('d')) {
       this.x += 16 * delta
     }
     if (this.input.getInputDown('w')) {
       this.y -= 16 * delta
-    } else if (this.input.getInputDown('s')) {
+    }
+    if (this.input.getInputDown('s')) {
       this.y += 16 * delta
     }
   }
