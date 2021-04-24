@@ -122,22 +122,31 @@ export class Graphics {
     })
   }
   private createUI() {
-    this.ui.worldName = addTextLive(
+    this.ui.textServerTickRate = addTextLive(
       this.app,
       this.networkState.getEventEmitter(),
-      'setWorldName',
-      () => this.networkState.getWorldName(),
+      'setServerTickRate',
+      () => 'Tick Rate: ' + this.networkState.getServerTickRate().toFixed(0),
       -HALF_WIDTH + PADDING_LEFT,
-      -HALF_HEIGHT + PADDING_TOP,
+      -HALF_HEIGHT + PADDING_TOP + 16 * 0,
       0,
     )
-    this.ui.worldName = addTextLive(
+    this.ui.textEntityId = addTextLive(
       this.app,
       this.selection.getEventEmitter(),
       'entity',
-      () => this.selection.getSelectedEntity()?.id || 'None',
+      () => 'Selected EntityID: ' + (this.selection.getSelectedEntity()?.id || 'None'),
       -HALF_WIDTH + PADDING_LEFT,
       -HALF_HEIGHT + PADDING_TOP + 16 * 1,
+      0,
+    )
+    this.ui.textWorldName = addTextLive(
+      this.app,
+      this.networkState.getEventEmitter(),
+      'setWorldName',
+      () => 'World Name: ' + this.networkState.getWorldName(),
+      -HALF_WIDTH + PADDING_LEFT,
+      -HALF_HEIGHT + PADDING_TOP + 16 * 2,
       0,
     )
   }
