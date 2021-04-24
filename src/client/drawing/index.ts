@@ -8,9 +8,10 @@ import { addLine } from './line'
 import { addTextLive } from './text'
 import { Input } from './input'
 import { Camera } from '../camera'
-import EventEmitter from 'events'
 import { HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
 import { Actions } from '../actions'
+import { Timer } from '../timer'
+import { Selection } from '../selection'
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
@@ -33,37 +34,6 @@ class EntityLibrary {
   }
 }
 
-class Selection {
-  private selectedEntity: NSEntity | undefined
-  private readonly events = new EventEmitter()
-  getEventEmitter(): EventEmitter {
-    return this.events
-  }
-  getSelectedEntity(): NSEntity | undefined {
-    return this.selectedEntity
-  }
-  setSelectedEntity(entity: NSEntity) {
-    this.selectedEntity = entity
-    this.events.emit('entity')
-    this.events.emit('entity-set')
-  }
-  clearSelectedEntity() {
-    this.selectedEntity = undefined
-    this.events.emit('entity')
-    this.events.emit('entity-clear')
-  }
-}
-
-class Timer {
-  private time = Date.now()
-  lap() {
-    this.time = Date.now()
-  }
-  getLapTime(): number {
-    return Date.now() - this.time
-  }
-}
-
 export class Graphics {
   private readonly networkState: NetworkState
   private readonly actions: Actions
@@ -71,11 +41,11 @@ export class Graphics {
   private readonly app: PIXI.Application
   private readonly ui: any = {}
   private readonly input = new Input()
-  private camera!: Camera
   private readonly entitiesRegistry = new DirtRegistry()
   private readonly entitiesMap = new Map<string, PIXI.Graphics>()
   private readonly selection = new Selection()
   private readonly tickTimer = new Timer()
+  private camera!: Camera
 
   constructor(networkState: NetworkState, actions: Actions) {
     this.networkState = networkState
