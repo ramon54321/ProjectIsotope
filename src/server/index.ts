@@ -2,6 +2,7 @@ import { NetServer, Connection } from '../shared/engine/networking'
 import { NetworkState } from '../shared/game/network-state'
 import { serialize } from '../shared/engine/serialization'
 import { ServerState } from './server-state'
+import { Vec2 } from '../shared/engine/math'
 
 const TICK_RATE = 5
 
@@ -32,6 +33,8 @@ function tickActions(actionPayloadQueue: any[]) {
   while (actionPayload) {
     if (actionPayload.action === 'move') {
       serverState.setEntityMoveTarget(actionPayload.entityId, actionPayload.target)
+    } else if (actionPayload.action === 'spawn') {
+      serverState.createEntity(new Vec2(actionPayload.position.x, actionPayload.position.y))
     }
     actionPayload = actionPayloadQueue.shift()
   }

@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js'
+import { MenuItem } from '../interaction'
 
 const FONT_SIZE = 12
 const TEXT_STYLE = new PIXI.TextStyle({
@@ -6,18 +7,13 @@ const TEXT_STYLE = new PIXI.TextStyle({
   fill: 0xeeeeee,
 })
 
-type MenuItem = {
-  text: string
-  action: () => void
-}
-
 const BACKGROUND_COLOR = 0x888888
 const BACKGROUND_ALPHA_BASE = 0.6
 const BACKGROUND_ALPHA_HOVER = 0.9
 const ITEM_HEIGHT = 20
 const PADDING_LEFT = 10
 
-export function addMenu(app: PIXI.Application, items: MenuItem[], x: number, y: number, afterClickCallback?: () => void) {
+export function addMenu(app: PIXI.Application, items: MenuItem[], x: number, y: number, itemClickCallback: (item: MenuItem) => void, afterClickCallback?: () => void) {
   const menu = new PIXI.Container()
   menu.position.x = x
   menu.position.y = y
@@ -34,7 +30,7 @@ export function addMenu(app: PIXI.Application, items: MenuItem[], x: number, y: 
     rect.on('mouseover', () => (rect.alpha = BACKGROUND_ALPHA_HOVER))
     rect.on('mouseout', () => (rect.alpha = BACKGROUND_ALPHA_BASE))
     rect.on('mouseup', () => {
-      item.action()
+      itemClickCallback(item)
       afterClickCallback?.()
     })
     const message = new PIXI.Text(item.text, TEXT_STYLE)

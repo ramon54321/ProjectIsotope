@@ -12,7 +12,7 @@ import { HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
 import { Actions } from '../actions'
 import { Timer } from '../timer'
 import { Selection } from '../selection'
-import { Interaction } from '../interaction'
+import { Interaction, MenuItem } from '../interaction'
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
@@ -100,12 +100,27 @@ export class Graphics {
   }
   private createInteraction() {
     this.interaction = new Interaction(this.app)
+    const menuBase: MenuItem[] = [
+      {
+        text: 'Spawn',
+        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition),
+      },
+    ]
     this.app.ticker.add(() => {
       const selectedEntity = this.selection.getSelectedEntity()
+      const cameraPosition = this.camera.getPosition()
       const mouseScreenPosition = this.input.getMouseScreenPosition(this.app)
       this.ui.background.on('mouseup', () => this.interaction.close())
-      if (selectedEntity && this.input.getInputOnce('e')) {
-        this.interaction.toggle(mouseScreenPosition)
+      const shouldOpenMenu = this.input.getInputOnce('e')
+      if (shouldOpenMenu && selectedEntity) {
+        this.interaction.toggle(cameraPosition, mouseScreenPosition, [
+          {
+            text: 'Move',
+            action: (worldPosition: Vec2) => this.actions.moveEntity(this.selection.getSelectedEntity()?.id, worldPosition),
+          },
+        ])
+      } else if (shouldOpenMenu) {
+        this.interaction.toggle(cameraPosition, mouseScreenPosition, menuBase)
       }
     })
   }
