@@ -12,6 +12,7 @@ import { HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
 import { Actions } from '../actions'
 import { Timer } from '../timer'
 import { Selection } from '../selection'
+import { Interaction } from '../interaction'
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
@@ -45,6 +46,7 @@ export class Graphics {
   private readonly entitiesMap = new Map<string, PIXI.Graphics>()
   private readonly selection = new Selection()
   private readonly tickTimer = new Timer()
+  private interaction!: Interaction
   private camera!: Camera
 
   constructor(networkState: NetworkState, actions: Actions) {
@@ -65,6 +67,7 @@ export class Graphics {
   start() {
     this.setStageCenter()
     this.createCamera()
+    this.createInteraction()
     this.createInput()
     this.createBackground()
     this.createOriginMarkers()
@@ -95,13 +98,24 @@ export class Graphics {
     this.camera = new Camera(this.input)
     this.app.ticker.add(delta => this.camera.render(delta))
   }
+  private createInteraction() {
+    this.interaction = new Interaction(this.app)
+    this.app.ticker.add(() => {
+      const selectedEntity = this.selection.getSelectedEntity()
+      const mouseScreenPosition = this.input.getMouseScreenPosition(this.app)
+      this.ui.background.on('mouseup', () => this.interaction.close())
+      if (selectedEntity && this.input.getInputOnce('e')) {
+        this.interaction.toggle(mouseScreenPosition)
+      }
+    })
+  }
   private createInput() {
     this.app.ticker.add(() => {
       const selectedEntity = this.selection.getSelectedEntity()
       const cameraPosition = this.camera.getPosition()
+      const mouseWorldPosition = this.input.getMouseWorldPosition(this.app, cameraPosition)
       if (selectedEntity && this.input.getInputOnce('m')) {
-        const worldPosition = this.input.getMouseWorldPosition(this.app, cameraPosition)
-        this.actions.moveEntity(selectedEntity.id, worldPosition)
+        this.actions.moveEntity(selectedEntity.id, mouseWorldPosition)
       }
     })
   }
