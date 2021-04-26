@@ -8,7 +8,15 @@ export type ComponentTags = {
 }
 export type Components = typeof components[number]
 
-export class Identity extends TaggedComponent<ComponentTags, Components>('Identity') {}
+export class Identity extends TaggedComponent<ComponentTags, Components>('Identity') {
+  private readonly displayName: string
+  private readonly description: string
+  constructor(displayName: string, description: string) {
+    super()
+    this.displayName = displayName
+    this.description = description
+  }
+}
 export class Position extends TaggedComponent<ComponentTags, Components>('Position') {
   private readonly position = new Vec2(0, 0)
   private readonly targetPosition = new Vec2(0, 0)

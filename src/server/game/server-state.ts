@@ -14,7 +14,10 @@ export class ServerState {
     this.ecs = new ECS<ComponentTags, Components>(this.networkState, components).addSystem(Movement)
   }
   createEntity(position: Vec2 = new Vec2(0, 0)) {
-    const entity = this.ecs.createEntity().addComponent(new Position(position.x, position.y)).addComponent(new Identity())
+    const entity = this.ecs
+      .createEntity()
+      .addComponent(new Position(position.x, position.y))
+      .addComponent(new Identity('Dummy', 'A generic dummy entity, generally used for testing purposes'))
     this.networkState.addEntity({
       id: entity.id,
       kind: 'dummy',
