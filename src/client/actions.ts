@@ -21,10 +21,12 @@ export class Actions {
       target: target,
     })
   }
-  spawnEntity(position: Vec2) {
+  spawnEntity(position: Vec2, kind: string, options?: any) {
     this.sendAction({
       action: 'spawn',
       position: position,
+      kind: kind,
+      ...options,
     })
   }
 }

@@ -1,10 +1,11 @@
 import { Vec2 } from '../../shared/engine/math'
 import { TaggedComponent } from '../engine/ecs'
 
-export const components = ['Position', 'Identity'] as const
+export const components = ['Position', 'Identity', 'Team'] as const
 export type ComponentTags = {
   Position: Position
   Identity: Identity
+  Team: Team
 }
 export type Components = typeof components[number]
 
@@ -51,5 +52,17 @@ export class Position extends TaggedComponent<ComponentTags, Components>('Positi
   setTargetPosition(x: number, y: number) {
     this.targetPosition.x = x
     this.targetPosition.y = y
+  }
+}
+export class Team extends TaggedComponent<ComponentTags, Components>('Team') {
+  private readonly team: number
+  constructor(team: number) {
+    super()
+    this.team = team
+  }
+  getNetworkStateRepresentation() {
+    return {
+      team: this.team,
+    }
   }
 }

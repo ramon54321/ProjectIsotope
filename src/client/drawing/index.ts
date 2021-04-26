@@ -19,7 +19,8 @@ const PADDING_TOP = 16
 
 class EntityLibrary {
   static getGraphics(app: PIXI.Application, entity: NSEntity) {
-    if (entity.kind === 'dummy') {
+    const simpleKinds = ['Dummy', 'Pawn']
+    if (simpleKinds.includes(entity.kind)) {
       const main = addCircle(app, 0, 0, 8)
       const displayNameText = entity.components.get('Identity')?.displayName
       if (displayNameText !== undefined) {
@@ -109,8 +110,16 @@ export class Graphics {
     this.interaction = new Interaction(this.app)
     const menuBase: MenuItem[] = [
       {
-        text: 'Spawn',
-        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition),
+        text: 'Spawn Dummy',
+        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'Dummy'),
+      },
+      {
+        text: 'Spawn Pawn Team 0',
+        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'Pawn', { team: 0 }),
+      },
+      {
+        text: 'Spawn Pawn Team 1',
+        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'Pawn', { team: 1 }),
       },
     ]
     this.app.ticker.add(() => {
