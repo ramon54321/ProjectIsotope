@@ -1,7 +1,7 @@
 import { NetServer, Connection } from '../shared/engine/networking'
 import { NetworkState } from '../shared/game/network-state'
 import { serialize } from '../shared/engine/serialization'
-import { ServerState } from './server-state'
+import { ServerState } from './game/server-state'
 import { Vec2 } from '../shared/engine/math'
 
 const TICK_RATE = 5
