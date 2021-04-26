@@ -24,7 +24,7 @@ export class ServerState {
   setEntityMoveTarget(entityId: string, target: Vec2) {
     this.ecs.getEntityById(entityId)?.getComponent('Position')?.setTargetPosition(target.x, target.y)
   }
-  tick() {
+  tickEcs() {
     this.ecs.tick()
   }
 }
