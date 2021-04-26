@@ -5,7 +5,7 @@ import { NSEntity, NetworkState } from '../../shared/game/network-state'
 import { addCircle } from './circle'
 import { addRect } from './rectangle'
 import { addLine } from './line'
-import { addTextLive } from './text'
+import { addText, addTextLive } from './text'
 import { Input } from './input'
 import { Camera } from '../camera'
 import { HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
@@ -20,7 +20,13 @@ const PADDING_TOP = 16
 class EntityLibrary {
   static getGraphics(app: PIXI.Application, entity: NSEntity) {
     if (entity.kind === 'dummy') {
-      return addCircle(app, 0, 0, 8)
+      const main = addCircle(app, 0, 0, 8)
+      const displayNameText = entity.components.get('Identity')?.displayName
+      if (displayNameText !== undefined) {
+        const displayName = addText(app, displayNameText, 0, 20, 0.5)
+        main.addChild(displayName)
+      }
+      return main
     } else {
       const body = new PIXI.Sprite(app.loader.resources['res/body1.png'].texture)
       body.anchor.set(0.5, 0.5)

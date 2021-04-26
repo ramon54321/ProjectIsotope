@@ -16,6 +16,12 @@ export class Identity extends TaggedComponent<ComponentTags, Components>('Identi
     this.displayName = displayName
     this.description = description
   }
+  getNetworkStateRepresentation() {
+    return {
+      displayName: this.displayName,
+      description: this.description,
+    }
+  }
 }
 export class Position extends TaggedComponent<ComponentTags, Components>('Position') {
   private readonly position = new Vec2(0, 0)
@@ -29,7 +35,7 @@ export class Position extends TaggedComponent<ComponentTags, Components>('Positi
   }
   getNetworkStateRepresentation() {
     return {
-      position: this.position
+      position: this.position,
     }
   }
   getPosition(): Vec2 {
