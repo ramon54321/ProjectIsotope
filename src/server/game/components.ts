@@ -27,6 +27,11 @@ export class Position extends TaggedComponent<ComponentTags, Components>('Positi
     this.targetPosition.x = x
     this.targetPosition.y = y
   }
+  getNetworkStateRepresentation() {
+    return {
+      position: this.position
+    }
+  }
   getPosition(): Vec2 {
     return this.position
   }

@@ -79,15 +79,16 @@ export class Graphics {
   beforeTick() {
     this.tickTimer.lap()
     this.entitiesMap.forEach((graphics: any, entityId: string) => {
-      const e = this.networkState.getEntity(entityId)
-      if (e === undefined) return
-      graphics.lastPosition = new Vec2(e.position.x, e.position.y)
+      const position = this.networkState.getEntityComponent(entityId, 'Position')?.position
+      if (position === undefined) return
+      graphics.lastPosition = new Vec2(position.x, position.y)
     })
   }
   afterTick() {
     this.entitiesMap.forEach((graphics: any, entityId: string) => {
-      const e = this.networkState.getEntity(entityId)!
-      graphics.velocity = graphics.lastPosition.differenceTo(e.position)
+      const position = this.networkState.getEntityComponent(entityId, 'Position')?.position
+      if (position === undefined) return
+      graphics.velocity = graphics.lastPosition.differenceTo(position)
     })
   }
 
@@ -184,8 +185,12 @@ export class Graphics {
       const graphics = EntityLibrary.getGraphics(this.app, entity) as any
       graphics.interactive = true
       graphics.on('mouseup', () => this.selection.setSelectedEntity(entity))
-      graphics.position.set(entity.position.x - cameraPosition.x, entity.position.y - cameraPosition.y)
-      graphics.lastPosition = new Vec2(entity.position.x, entity.position.y)
+      const position = entity.components.get('Position')?.position
+      if (position === undefined) {
+        throw new Error('Position component not found ... this should not be possible... ensure component is set in network state')
+      }
+      graphics.position.set(position.x - cameraPosition.x, position.y - cameraPosition.y)
+      graphics.lastPosition = new Vec2(position.x, position.y)
       graphics.velocity = new Vec2(0, 0)
       this.entitiesMap.set(entity.id, graphics)
     }
@@ -209,7 +214,7 @@ export class Graphics {
     this.app.ticker.add(delta => {
       const cameraPosition = this.camera.getPosition()
       const timeSinceLastTick = this.tickTimer.getLapTime()
-      const tickInterpolation = (timeSinceLastTick * 5) / 1000
+      const tickInterpolation = (timeSinceLastTick * this.networkState.getServerTickRate()) / 1000
       this.entitiesRegistry.update(
         this.networkState.getEntities(),
         entity => createEntity(entity, cameraPosition),

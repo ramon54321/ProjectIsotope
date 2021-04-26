@@ -5,7 +5,7 @@ import { Entity } from './server-state'
 abstract class System extends ECSSystem<ComponentTags, Components> {}
 
 export class Movement extends System {
-  private static readonly MOVEMENT_NULL_ZONE = 5
+  private static readonly MOVEMENT_NULL_ZONE = 2
   protected readonly dependentComponentTags = ['Position'] as const
   onTick(entity: Entity) {
     const positionComponent = entity.getComponent('Position')
@@ -20,7 +20,8 @@ export class Movement extends System {
       const x = position.x + movement.x
       const y = position.y + movement.y
       positionComponent.setPosition(x, y)
-      this.networkState.setEntityPosition(entity.id, x, y)
+      positionComponent.updateNetworkState()
+      // this.networkState.setEntityPosition(entity.id, x, y)
     }
   }
 }

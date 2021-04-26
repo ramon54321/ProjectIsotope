@@ -22,7 +22,13 @@ export class NetworkState extends State {
   }
   private entities = new Map<string, NSEntity>()
   @Pushable()
-  addEntity(entity: NSEntity) {
+  createEntity(id: string, kind: string) {
+    const entity = {
+      id: id,
+      kind: kind,
+      position: new Vec2(0, 0),
+      components: new Map<string, any>(),
+    }
     this.entities.set(entity.id, entity)
   }
   @Pushable()
@@ -36,35 +42,18 @@ export class NetworkState extends State {
     return this.entities.get(id)
   }
   @Pushable()
-  setEntityPositionX(id: string, x: number) {
+  setEntityComponent(id: string, componentKey: string, value: any) {
     const entity = this.entities.get(id)
     if (!entity) return
-    entity.position.x = x
+    entity.components.set(componentKey, value)
   }
-  @Pushable()
-  setEntityPositionY(id: string, y: number) {
-    const entity = this.entities.get(id)
-    if (!entity) return
-    entity.position.y = y
-  }
-  @Pushable()
-  setEntityPosition(id: string, x: number, y: number) {
-    const entity = this.entities.get(id)
-    if (!entity) return
-    entity.position.x = x
-    entity.position.y = y
-  }
-  @Pushable()
-  moveEntity(id: string, dx: number, dy: number) {
-    const entity = this.entities.get(id)
-    if (!entity) return
-    entity.position.x += dx
-    entity.position.y += dy
+  getEntityComponent(id: string, componentKey: string): any {
+    return this.entities.get(id)?.components.get(componentKey)
   }
 }
 
 export interface NSEntity {
   id: string
   kind: string
-  position: Vec2
+  components: Map<string, any>
 }

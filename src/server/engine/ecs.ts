@@ -20,7 +20,7 @@ export class ECS<CT, T extends keyof CT> {
     this.systems.forEach(system => system.tick())
   }
   createEntity(): Entity<CT, T> {
-    const entity = new Entity<CT, T>(this, IdManager.generateId())
+    const entity = new Entity<CT, T>(this, this.networkState, IdManager.generateId())
     this.entitiesMap.set(entity.id, entity)
     return entity
   }
@@ -46,15 +46,17 @@ export class ECS<CT, T extends keyof CT> {
 
 export class Entity<CT, T extends keyof CT> {
   private readonly ecs: ECS<CT, T>
+  private readonly networkState: NetworkState
   readonly id: string
   private readonly components: Set<Component<CT, T>> = new Set()
   private readonly componentMap = new Map<T, Component<CT, T>>()
-  constructor(ecs: ECS<CT, T>, id: string) {
+  constructor(ecs: ECS<CT, T>, networkState: NetworkState, id: string) {
     this.ecs = ecs
+    this.networkState = networkState
     this.id = id
   }
   addComponent(component: Component<CT, T>): Entity<CT, T> {
-    component._setEntity(this)
+    component._setup(this, this.networkState)
     this.components.add(component)
     this.ecs.__addEntityToComponentSet(this, component.getTag())
     this.componentMap.set(component.getTag(), component)
@@ -63,17 +65,28 @@ export class Entity<CT, T extends keyof CT> {
   getComponent<K extends T>(componentTag: K): CT[K] {
     return (this.componentMap.get(componentTag) as unknown) as CT[K]
   }
+  getComponentMap(): Map<T, Component<CT, T>> {
+    return this.componentMap
+  }
   getComponents(): Set<Component<CT, T>> {
     return this.components
   }
 }
 
-export abstract class Component<CT, T extends keyof CT> {
+export class Component<CT, T extends keyof CT> {
   protected entity!: Entity<CT, T>
-  _setEntity(entity: Entity<CT, T>) {
+  protected networkState!: NetworkState
+  _setup(entity: Entity<CT, T>, networkState: NetworkState) {
     this.entity = entity
+    this.networkState = networkState
   }
   start() {}
+  protected getNetworkStateRepresentation(): any {}
+  updateNetworkState() {
+    const networkStateRepresentation = this.getNetworkStateRepresentation()
+    if (networkStateRepresentation === undefined) return
+    this.networkState.setEntityComponent(this.entity.id, this.getTag() as string, networkStateRepresentation)
+  }
   getTag(): T {
     return this.constructor.prototype.tag
   }

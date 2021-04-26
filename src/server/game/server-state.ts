@@ -18,11 +18,8 @@ export class ServerState {
       .createEntity()
       .addComponent(new Position(position.x, position.y))
       .addComponent(new Identity('Dummy', 'A generic dummy entity, generally used for testing purposes'))
-    this.networkState.addEntity({
-      id: entity.id,
-      kind: 'dummy',
-      position: position,
-    })
+    this.networkState.createEntity(entity.id, 'dummy')
+    entity.getComponents().forEach(component => component.updateNetworkState())
   }
   setEntityMoveTarget(entityId: string, target: Vec2) {
     this.ecs.getEntityById(entityId)?.getComponent('Position')?.setTargetPosition(target.x, target.y)
