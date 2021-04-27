@@ -7,9 +7,9 @@ const TEXT_STYLE = new PIXI.TextStyle({
   fill: 0xeeeeee,
 })
 
-const BACKGROUND_COLOR = 0x888888
-const BACKGROUND_ALPHA_BASE = 0.6
-const BACKGROUND_ALPHA_HOVER = 0.9
+const BACKGROUND_COLOR = 0x292929
+const BACKGROUND_ALPHA_BASE = 0.45
+const BACKGROUND_ALPHA_HOVER = 0.95
 const ITEM_HEIGHT = 20
 const PADDING_LEFT = 10
 
@@ -21,7 +21,7 @@ export function addMenu(app: PIXI.Application, items: MenuItem[], x: number, y: 
     const y = ITEM_HEIGHT * i + ITEM_HEIGHT / 2
     const rect = new PIXI.Graphics()
     rect.beginFill(BACKGROUND_COLOR)
-    rect.drawRect(0, -ITEM_HEIGHT / 2, 100, ITEM_HEIGHT)
+    rect.drawRect(0, -ITEM_HEIGHT / 2, 160, ITEM_HEIGHT)
     rect.endFill()
     rect.alpha = BACKGROUND_ALPHA_BASE
     rect.x = 0
