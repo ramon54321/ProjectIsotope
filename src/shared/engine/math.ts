@@ -13,6 +13,12 @@ export class Vec2 {
     const dy = target.y - this.y
     return new Vec2(dx, dy)
   }
+  distanceTo(target: Vec2): number {
+    return this.differenceTo(target).magnitude()
+  }
+  squareDistanceTo(target: Vec2): number {
+    return this.differenceTo(target).squareMagnitude()
+  }
   directionTo(target: Vec2): Vec2 {
     return this.differenceTo(target).normalized()
   }
@@ -21,6 +27,9 @@ export class Vec2 {
   }
   magnitude(): number {
     return Math.sqrt(this.x * this.x + this.y * this.y)
+  }
+  squareMagnitude(): number {
+    return this.x * this.x + this.y * this.y
   }
   normalized(): Vec2 {
     const magnitude = this.magnitude()

@@ -1,13 +1,16 @@
 import { NetworkState } from '../../shared/game/network-state'
+import { ServerState } from '../game/server-state'
 import { IdManager } from './id-manager'
 
 export class ECS<CT, T extends keyof CT> {
   private readonly networkState: NetworkState
+  private readonly serverState: ServerState
   private readonly entitiesMap: Map<string, Entity<CT, T>> = new Map<string, Entity<CT, T>>()
   private readonly entityComponentMap: Record<T, Set<Entity<CT, T>>>
   private readonly systems: System<CT, T>[] = []
-  constructor(networkState: NetworkState, componentTags: readonly T[]) {
+  constructor(networkState: NetworkState, serverState: ServerState, componentTags: readonly T[]) {
     this.networkState = networkState
+    this.serverState = serverState
     this.entityComponentMap = {} as any
     componentTags.forEach(componentTag => {
       this.entityComponentMap[componentTag] = new Set<Entity<CT, T>>()
@@ -19,13 +22,18 @@ export class ECS<CT, T extends keyof CT> {
   tick() {
     this.systems.forEach(system => system.tick())
   }
+  tickSlow() {
+    this.systems.forEach(system => system.tickSlow())
+  }
   createEntity(): Entity<CT, T> {
     const entity = new Entity<CT, T>(this, this.networkState, IdManager.generateId())
     this.entitiesMap.set(entity.id, entity)
     return entity
   }
-  addSystem<S extends System<CT, T>>(systemClass: new (ecs: ECS<CT, T>, networkState: NetworkState) => S): ECS<CT, T> {
-    this.systems.push(new systemClass(this, this.networkState))
+  addSystem<S extends System<CT, T>>(
+    systemClass: new (ecs: ECS<CT, T>, networkState: NetworkState, serverState: ServerState) => S,
+  ): ECS<CT, T> {
+    this.systems.push(new systemClass(this, this.networkState, this.serverState))
     return this
   }
   getEntitiesWithComponents(componentTags: readonly T[]): Set<Entity<CT, T>> {
@@ -93,16 +101,22 @@ export class Component<CT, T extends keyof CT> {
 }
 
 export abstract class System<CT, T extends keyof CT> {
-  private readonly ecs: ECS<CT, T>
+  protected readonly ecs: ECS<CT, T>
   protected readonly networkState: NetworkState
+  protected readonly serverState: ServerState
   protected abstract readonly dependentComponentTags: readonly T[]
   protected abstract onTick(entity: Entity<CT, T>): void
-  constructor(ecs: ECS<CT, T>, networkState: NetworkState) {
+  protected abstract onTickSlow(entity: Entity<CT, T>): void
+  constructor(ecs: ECS<CT, T>, networkState: NetworkState, serverState: ServerState) {
     this.ecs = ecs
     this.networkState = networkState
+    this.serverState = serverState
   }
   tick() {
     this.ecs.getEntitiesWithComponents(this.dependentComponentTags).forEach(entity => this.onTick(entity))
+  }
+  tickSlow() {
+    this.ecs.getEntitiesWithComponents(this.dependentComponentTags).forEach(entity => this.onTickSlow(entity))
   }
 }
 

@@ -1,4 +1,3 @@
-import { Vec2 } from '../../shared/engine/math'
 import { ServerState } from './server-state'
 
 export class GameLogic {
@@ -14,14 +13,16 @@ export class GameLogic {
     this.tickActions()
     this.serverState.tickEcs()
   }
-  tickSlow() {}
+  tickSlow() {
+    this.serverState.tickSlowEcs()
+  }
   private tickActions() {
     let actionPayload = this.actionPayloadQueue.shift()
     while (actionPayload) {
       if (actionPayload.action === 'move') {
         this.serverState.setEntityMoveTarget(actionPayload.entityId, actionPayload.target)
       } else if (actionPayload.action === 'spawn') {
-        this.serverState.createEntity(actionPayload.kind, { position: new Vec2(actionPayload.position.x, actionPayload.position.y) })
+        this.serverState.createEntity(actionPayload.kind, actionPayload)
       }
       actionPayload = this.actionPayloadQueue.shift()
     }

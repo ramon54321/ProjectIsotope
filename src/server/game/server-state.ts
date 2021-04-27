@@ -3,7 +3,7 @@ import { NetworkState } from '../../shared/game/network-state'
 import { ECS as ECSECS, Entity as ECSEntity } from '../engine/ecs'
 import { components, Components, ComponentTags } from './components'
 import { Library } from './library'
-import { Movement } from './systems'
+import { Movement, Reaction } from './systems'
 
 export type Entity = ECSEntity<ComponentTags, Components>
 export type ECS = ECSECS<ComponentTags, Components>
@@ -13,7 +13,7 @@ export class ServerState {
   private readonly ecs: ECS
   constructor(networkState: NetworkState) {
     this.networkState = networkState
-    this.ecs = new ECSECS<ComponentTags, Components>(this.networkState, components).addSystem(Movement)
+    this.ecs = new ECSECS<ComponentTags, Components>(this.networkState, this, components).addSystem(Movement).addSystem(Reaction)
   }
   createEntity(kind: keyof typeof Library.Entities, options: any) {
     const entity = Library.Entities[kind].constructor(this.ecs, options)
@@ -25,5 +25,8 @@ export class ServerState {
   }
   tickEcs() {
     this.ecs.tick()
+  }
+  tickSlowEcs() {
+    this.ecs.tickSlow()
   }
 }
