@@ -1,3 +1,4 @@
+import { Stats } from '../../shared/game/stats'
 import { System as ECSSystem } from '../engine/ecs'
 import { Components, ComponentTags } from './components'
 import { Entity } from './server-state'
@@ -13,7 +14,7 @@ export class Movement extends System {
     const targetPosition = positionComponent.getTargetPosition()
     const difference = position.differenceTo(targetPosition)
     const magnitude = difference.magnitude()
-    const speed = 50
+    const speed = Stats.Entities.Pawn.speed
     const tickMovementDistance = speed / this.networkState.getServerTickRate()
     const movement = magnitude < tickMovementDistance ? difference : difference.normalized().scale(tickMovementDistance)
     if (magnitude >= Movement.MOVEMENT_NULL_ZONE) {
@@ -33,7 +34,12 @@ export class Reaction extends System {
     const sensesComponent = entitySelf.getComponent('Senses')
     const entities = sensesComponent.senseEntities(this.ecs.getEntities())
     const teamSelf = entitySelf.getComponent('Team')?.getTeam()
-    const reactionEntity = entities.find(entity => teamSelf !== entity.getComponent('Team').getTeam())
+    const reactionEntity = entities.find(entity => {
+      const team = entity.getComponent('Team')?.getTeam()
+      if (team === undefined) return false
+      if (team === teamSelf) return false
+      return true
+    })
     if (reactionEntity) {
       console.log(entitySelf.id, 'responding to sensed opponent', reactionEntity.id)
     }

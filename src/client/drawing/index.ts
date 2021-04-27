@@ -13,6 +13,7 @@ import { Actions } from '../actions'
 import { Timer } from '../timer'
 import { Selection } from '../selection'
 import { Interaction, MenuItem } from '../interaction'
+import { getEntityDetails } from './ui'
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
@@ -192,6 +193,16 @@ export class Graphics {
       () => 'World Name: ' + this.networkState.getWorldName(),
       -HALF_WIDTH + PADDING_LEFT,
       -HALF_HEIGHT + PADDING_TOP + 16 * 2,
+      0,
+    )
+    this.ui.selectedEntityDetails = addTextLive(
+      this.app,
+      this.selection.getEventEmitter(),
+      'entity',
+      () => getEntityDetails(this.selection.getSelectedEntity()),
+      HALF_WIDTH - PADDING_LEFT,
+      -HALF_HEIGHT + PADDING_TOP + 16 * 0,
+      1,
       0,
     )
   }

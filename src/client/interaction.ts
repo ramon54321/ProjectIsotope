@@ -25,10 +25,17 @@ export class Interaction {
   }
   toggle(cameraPosition: Vec2, screenPosition: Vec2, items: MenuItem[]) {
     if (this.container) return this.close()
-    const worldPosition = new Vec2(screenPosition.x - cameraPosition.x, screenPosition.y - cameraPosition.y)
+    const worldPosition = new Vec2(screenPosition.x + cameraPosition.x, screenPosition.y + cameraPosition.y)
     this.spawn(screenPosition, worldPosition, items)
   }
   private spawn(screenPosition: Vec2, worldPosition: Vec2, items: MenuItem[]) {
-    this.container = addMenu(this.app, items, screenPosition.x, screenPosition.y, item => item.action(worldPosition), () => this.close())
+    this.container = addMenu(
+      this.app,
+      items,
+      screenPosition.x,
+      screenPosition.y,
+      item => item.action(worldPosition),
+      () => this.close(),
+    )
   }
 }
