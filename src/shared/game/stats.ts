@@ -5,8 +5,12 @@ export const Stats = {
     },
   },
   Items: {
-    WIN1906: {
+    WEAPON_WIN1906: {
       displayName: 'Winchester 1906 .22',
+    },
+    BODY_HEAD_BOONIE: {
+      displayName: 'Boonie Hat',
+      protectionMelee: 0.01,
     },
   },
 }

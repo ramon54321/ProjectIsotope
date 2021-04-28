@@ -32,6 +32,6 @@ export function getEntityDetails(networkState: NetworkState, entity: NSEntity | 
   ]
   return list
     .filter(item => item.value !== undefined)
-    .map(item => item.value)
+    .map(item => `${item.name ? item.name + ':\n' : ''}${item.value}\n`)
     .join('\n')
 }

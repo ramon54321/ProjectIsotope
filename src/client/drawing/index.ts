@@ -134,7 +134,11 @@ export class Graphics {
         this.interaction.toggle(cameraPosition, mouseScreenPosition, [
           {
             text: 'Add Item - Win 1906',
-            action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'WIN1906'),
+            action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'WEAPON_WIN1906'),
+          },
+          {
+            text: 'Add Item - Boonie',
+            action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'BODY_HEAD_BOONIE'),
           },
         ])
       } else if (shouldOpenMenu && selectedEntity) {
