@@ -1,5 +1,5 @@
 import { Vec2 } from '../../shared/engine/math'
-import { Identity, Position, Senses, Team } from './components'
+import { Identity, Inventory, Position, Senses, Team } from './components'
 import { ECS } from './server-state'
 
 export const Library = {
@@ -23,6 +23,7 @@ export const Library = {
           .addComponent(new Identity('Pawn', 'A simple pawn which belongs to a team.'))
           .addComponent(new Team(team))
           .addComponent(new Senses(['Range'], 100))
+          .addComponent(new Inventory())
       },
     },
   },

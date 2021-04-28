@@ -2,12 +2,13 @@ import { Vec2 } from '../../shared/engine/math'
 import { TaggedComponent } from '../engine/ecs'
 import { Entity } from './server-state'
 
-export const components = ['Position', 'Identity', 'Team', 'Senses'] as const
+export const components = ['Position', 'Identity', 'Team', 'Senses', 'Inventory'] as const
 export type ComponentTags = {
   Position: Position
   Identity: Identity
   Team: Team
   Senses: Senses
+  Inventory: Inventory
 }
 export type Components = typeof components[number]
 
@@ -101,4 +102,29 @@ export class Senses extends TaggedComponent<ComponentTags, Components>('Senses')
       })
   }
   getNetworkStateRepresentation() {}
+}
+
+export class Inventory extends TaggedComponent<ComponentTags, Components>('Inventory') {
+  private readonly itemIds: Set<string> = new Set()
+  getItemIds(): string[] {
+    return Array.from(this.itemIds)
+  }
+  has(id: string): boolean {
+    return this.itemIds.has(id)
+  }
+  addItem(id: string) {
+    if (this.has(id)) return
+    this.itemIds.add(id)
+    this.updateNetworkState()
+  }
+  removeItem(id: string) {
+    if (this.itemIds.delete(id)) {
+      this.updateNetworkState()
+    }
+  }
+  getNetworkStateRepresentation() {
+    return {
+      items: this.getItemIds(),
+    }
+  }
 }

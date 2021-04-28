@@ -50,10 +50,23 @@ export class NetworkState extends State {
   getEntityComponent(id: string, componentKey: string): any {
     return this.entities.get(id)?.components.get(componentKey)
   }
+  private items = new Map<string, NSItem>()
+  @Pushable()
+  createItem(id: string, kind: string) {
+    this.items.set(id, {
+      id: id,
+      kind: kind,
+    })
+  }
 }
 
 export interface NSEntity {
   id: string
   kind: string
   components: Map<string, any>
+}
+
+export interface NSItem {
+  id: string
+  kind: string
 }

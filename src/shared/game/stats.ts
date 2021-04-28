@@ -3,5 +3,10 @@ export const Stats = {
     Pawn: {
       speed: 50
     }
+  },
+  Items: {
+    WIN1906: {
+      
+    }
   }
 }
