@@ -155,6 +155,7 @@ export class Graphics {
     this.ui.background = addRect(this.app, 0, 0, WIDTH, HEIGHT)
     this.ui.background.interactive = true
     this.ui.background.on('mouseup', () => this.selection.clearSelectedEntity())
+    this.ui.background.on('mouseover', () => this.selection.clearHoverEntity())
   }
   private createOriginMarkers() {
     this.ui.origin = addCircle(this.app, 0, 0, 3)
@@ -199,7 +200,10 @@ export class Graphics {
       this.app,
       this.selection.getEventEmitter(),
       'entity',
-      () => getEntityDetails(this.selection.getSelectedEntity()),
+      () => {
+        const entity = this.selection.getHoverEntity() || this.selection.getSelectedEntity()
+        return getEntityDetails(entity)
+      },
       HALF_WIDTH - PADDING_LEFT,
       -HALF_HEIGHT + PADDING_TOP + 16 * 0,
       1,
@@ -211,6 +215,7 @@ export class Graphics {
       const graphics = EntityLibrary.getGraphics(this.app, entity) as any
       graphics.interactive = true
       graphics.on('mouseup', () => this.selection.setSelectedEntity(entity))
+      graphics.on('mouseover', () => this.selection.setHoverEntity(entity))
       const position = entity.components.get('Position')?.position
       if (position === undefined) {
         throw new Error('Position component not found ... this should not be possible... ensure component is set in network state')
