@@ -1,6 +1,7 @@
 import { Vec2 } from '../../shared/engine/math'
 import { NetworkState } from '../../shared/game/network-state'
 import { ECS as ECSECS, Entity as ECSEntity } from '../engine/ecs'
+import { IdManager } from '../engine/id-manager'
 import { components, Components, ComponentTags } from './components'
 import { Library } from './library'
 import { Movement, Reaction } from './systems'
@@ -15,6 +16,12 @@ export class ServerState {
     this.networkState = networkState
     this.ecs = new ECSECS<ComponentTags, Components>(this.networkState, this, components).addSystem(Movement).addSystem(Reaction)
   }
+  tickEcs() {
+    this.ecs.tick()
+  }
+  tickSlowEcs() {
+    this.ecs.tickSlow()
+  }
   createEntity(kind: keyof typeof Library.Entities, options: any) {
     const entity = Library.Entities[kind].constructor(this.ecs, options)
     this.networkState.createEntity(entity.id, kind)
@@ -23,10 +30,11 @@ export class ServerState {
   setEntityMoveTarget(entityId: string, target: Vec2) {
     this.ecs.getEntityById(entityId)?.getComponent('Position')?.setTargetPosition(target.x, target.y)
   }
-  tickEcs() {
-    this.ecs.tick()
-  }
-  tickSlowEcs() {
-    this.ecs.tickSlow()
+  addItem(entityId: string, kind: string, options: any) {
+    const entity = this.ecs.getEntityById(entityId)
+    if (!entity) return
+    const id = IdManager.generateId()
+    this.networkState.createItem(id, kind)
+    entity.getComponent('Inventory')?.addItem(id)
   }
 }

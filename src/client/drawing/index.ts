@@ -125,11 +125,19 @@ export class Graphics {
     ]
     this.app.ticker.add(() => {
       const selectedEntity = this.selection.getSelectedEntity()
+      const hoverEntity = this.selection.getHoverEntity()
       const cameraPosition = this.camera.getPosition()
       const mouseScreenPosition = this.input.getMouseScreenPosition(this.app)
       this.ui.background.on('mouseup', () => this.interaction.close())
       const shouldOpenMenu = this.input.getInputOnce('e')
-      if (shouldOpenMenu && selectedEntity) {
+      if (shouldOpenMenu && selectedEntity && hoverEntity) {
+        this.interaction.toggle(cameraPosition, mouseScreenPosition, [
+          {
+            text: 'Add Item - Win 1906',
+            action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'WIN1906'),
+          },
+        ])
+      } else if (shouldOpenMenu && selectedEntity) {
         this.interaction.toggle(cameraPosition, mouseScreenPosition, [
           {
             text: 'Move',
@@ -202,7 +210,7 @@ export class Graphics {
       'entity',
       () => {
         const entity = this.selection.getHoverEntity() || this.selection.getSelectedEntity()
-        return getEntityDetails(entity)
+        return getEntityDetails(this.networkState, entity)
       },
       HALF_WIDTH - PADDING_LEFT,
       -HALF_HEIGHT + PADDING_TOP + 16 * 0,

@@ -58,6 +58,9 @@ export class NetworkState extends State {
       kind: kind,
     })
   }
+  getItem(id: string): NSItem | undefined {
+    return this.items.get(id)
+  }
 }
 
 export interface NSEntity {
