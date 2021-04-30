@@ -12,9 +12,12 @@ export function getEntityDetails(networkState: NetworkState, entity: NSEntity | 
   const inventory = entity.components
     .get('Inventory')
     ?.items.map((id: string) => {
-      const itemKind = networkState.getItem(id)?.kind
-      if (itemKind === undefined) return 'unknown'
-      return (Stats.Items as any)[itemKind]?.displayName || 'unknown'
+      const item = networkState.getItem(id) as any
+      if (item === undefined) return 'unknown'
+      const itemKind = item.kind
+      const label = (Stats.Items as any)[itemKind]?.displayName || 'unknown'
+      const quantity = item.quantity
+      return `${label}${quantity ? ' x' + quantity : ''}`
     })
     .join('\n\t')
   const list: DisplayListItem[] = [

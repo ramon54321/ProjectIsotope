@@ -182,7 +182,9 @@ export class Combat extends TaggedComponent<ComponentTags, Components>('Combat')
     const engagedEntityHealthComponent = this.engagedEntity?.getComponent('Health')
     if (!engagedEntityHealthComponent) return this.disengage()
     const ammunition = this.entity.getComponent('Inventory').getFirstItemOfKind('AMMO_22_SHORT')
-    if (!ammunition) return this.disengage()
+    if (!ammunition || ammunition.quantity === undefined || ammunition.quantity <= 0) return this.disengage()
+    ammunition.quantity--
+    this.networkState.updateItem(ammunition)
     const ammunitionStats = getItemStats(ammunition)
     const keneticEnergy = getKeneticEnergy(
       ammunitionStats.mass,

@@ -59,6 +59,11 @@ export class NetworkState extends State {
       ...options,
     })
   }
+  @Pushable()
+  updateItem(item: NSItem) {
+    if (!this.items.has(item.id)) return
+    this.items.set(item.id, item)
+  }
   getItem(id: string): NSItem | undefined {
     return this.items.get(id)
   }
@@ -73,4 +78,5 @@ export interface NSEntity {
 export interface NSItem {
   id: string
   kind: string
+  quantity?: number
 }
