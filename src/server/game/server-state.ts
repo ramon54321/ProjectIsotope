@@ -4,7 +4,7 @@ import { ECS as ECSECS, Entity as ECSEntity } from '../engine/ecs'
 import { IdManager } from '../engine/id-manager'
 import { components, Components, ComponentTags } from './components'
 import { Library } from './library'
-import { Movement, Reaction } from './systems'
+import { Combat, Movement, Reaction } from './systems'
 
 export type Entity = ECSEntity<ComponentTags, Components>
 export type ECS = ECSECS<ComponentTags, Components>
@@ -14,7 +14,10 @@ export class ServerState {
   private readonly ecs: ECS
   constructor(networkState: NetworkState) {
     this.networkState = networkState
-    this.ecs = new ECSECS<ComponentTags, Components>(this.networkState, this, components).addSystem(Movement).addSystem(Reaction)
+    this.ecs = new ECSECS<ComponentTags, Components>(this.networkState, this, components)
+      .addSystem(Movement)
+      .addSystem(Reaction)
+      .addSystem(Combat)
   }
   tickEcs() {
     this.ecs.tick()
@@ -27,6 +30,10 @@ export class ServerState {
     this.networkState.createEntity(entity.id, kind)
     entity.getComponents().forEach(component => component.updateNetworkState())
   }
+  deleteEntity(id: string) {
+    if (!this.ecs.deleteEntity(id)) return
+    this.networkState.deleteEntity(id)
+  }
   setEntityMoveTarget(entityId: string, target: Vec2) {
     this.ecs.getEntityById(entityId)?.getComponent('Position')?.setTargetPosition(target.x, target.y)
   }
@@ -34,7 +41,7 @@ export class ServerState {
     const entity = this.ecs.getEntityById(entityId)
     if (!entity) return
     const id = IdManager.generateId()
-    this.networkState.createItem(id, kind)
+    this.networkState.createItem(id, kind, options)
     entity.getComponent('Inventory')?.addItem(id)
   }
 }

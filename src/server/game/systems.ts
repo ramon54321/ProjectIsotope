@@ -40,8 +40,22 @@ export class Reaction extends System {
       if (team === teamSelf) return false
       return true
     })
-    if (reactionEntity) {
-      console.log(entitySelf.id, 'responding to sensed opponent', reactionEntity.id)
-    }
+    if (!reactionEntity) return
+    console.log(entitySelf.id, 'responding to sensed opponent', reactionEntity.id)
+    const combatComponent = entitySelf.getComponent('Combat')
+    if (!combatComponent) return
+    combatComponent.engage(reactionEntity)
+  }
+}
+
+export class Combat extends System {
+  protected readonly dependentComponentTags = ['Combat'] as const
+  onTick(entitySelf: Entity) {
+    const combatComponent = entitySelf.getComponent('Combat')
+    combatComponent.tick()
+  }
+  onTickSlow(entitySelf: Entity) {
+    const combatComponent = entitySelf.getComponent('Combat')
+    combatComponent.tickSlow()
   }
 }

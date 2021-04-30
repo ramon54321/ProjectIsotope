@@ -1,14 +1,20 @@
 import { Vec2 } from '../../shared/engine/math'
+import { NSItem } from '../../shared/game/network-state'
+import { Stats } from '../../shared/game/stats'
 import { TaggedComponent } from '../engine/ecs'
+import { getKeneticEnergy } from './ballistics'
 import { Entity } from './server-state'
+import { getItemStats } from './utils'
 
-export const components = ['Position', 'Identity', 'Team', 'Senses', 'Inventory'] as const
+export const components = ['Position', 'Identity', 'Team', 'Senses', 'Inventory', 'Combat', 'Health'] as const
 export type ComponentTags = {
   Position: Position
   Identity: Identity
   Team: Team
   Senses: Senses
   Inventory: Inventory
+  Combat: Combat
+  Health: Health
 }
 export type Components = typeof components[number]
 
@@ -42,6 +48,9 @@ export class Position extends TaggedComponent<ComponentTags, Components>('Positi
     return {
       position: this.position,
     }
+  }
+  isMoving(): boolean {
+    return !(Math.abs(this.position.x - this.targetPosition.x) < 2 && Math.abs(this.position.y - this.targetPosition.y) < 2)
   }
   getPosition(): Vec2 {
     return this.position
@@ -101,6 +110,13 @@ export class Senses extends TaggedComponent<ComponentTags, Components>('Senses')
         return selfToA - selfToB
       })
   }
+  canSense(entity: Entity): boolean {
+    const positionComponent = this.entity.getComponent('Position')
+    const positionSelf = positionComponent.getPosition()
+    const distance = positionSelf.distanceTo(entity.getComponent('Position')?.getPosition())
+    if (distance <= this.range) return true
+    return false
+  }
   getNetworkStateRepresentation() {}
 }
 
@@ -108,6 +124,11 @@ export class Inventory extends TaggedComponent<ComponentTags, Components>('Inven
   private readonly itemIds: Set<string> = new Set()
   getItemIds(): string[] {
     return Array.from(this.itemIds)
+  }
+  getFirstItemOfKind(kind: string): NSItem | undefined {
+    return this.getItemIds()
+      .map(id => this.networkState.getItem(id))
+      .find(item => item?.kind === kind)
   }
   has(id: string): boolean {
     return this.itemIds.has(id)
@@ -125,6 +146,103 @@ export class Inventory extends TaggedComponent<ComponentTags, Components>('Inven
   getNetworkStateRepresentation() {
     return {
       items: this.getItemIds(),
+    }
+  }
+}
+
+type CombatState = 'Idle' | 'Engaged'
+export class Combat extends TaggedComponent<ComponentTags, Components>('Combat') {
+  private state: CombatState = 'Idle'
+  private engagedEntity: Entity | undefined
+  engage(targetEntity: Entity) {
+    if (this.engagedEntity === targetEntity) return
+    if (!targetEntity.getComponent('Health')) return
+    this.engagedEntity = targetEntity
+    this.state = 'Engaged'
+  }
+  disengage() {
+    this.engagedEntity = undefined
+    this.state = 'Idle'
+  }
+  private weaponStats: any
+  tickSlow() {
+    this.setWeaponStats(this.findBestWeaponStats())
+    this.checkForSensesDisengage()
+  }
+  tick() {
+    if (this.state !== 'Engaged') return
+    if (!this.engagedEntity) return
+    if (!this.engagedEntity.getIsActive()) return this.disengage()
+    if (this.weaponStats === undefined) this.setWeaponStats(this.findBestWeaponStats())
+    if (!this.canAttack()) return
+    this.attack()
+  }
+  private attack() {
+    console.log('Attacking with', JSON.stringify(this.weaponStats))
+    const engagedEntityHealthComponent = this.engagedEntity?.getComponent('Health')
+    if (!engagedEntityHealthComponent) return this.disengage()
+    const ammunition = this.entity.getComponent('Inventory').getFirstItemOfKind('AMMO_22_SHORT')
+    if (!ammunition) return this.disengage()
+    const ammunitionStats = getItemStats(ammunition)
+    const keneticEnergy = getKeneticEnergy(
+      ammunitionStats.mass,
+      this.weaponStats.barrelLength,
+      ammunitionStats.barrelLengthMin,
+      ammunitionStats.barrelLengthMax,
+      ammunitionStats.velocityMin,
+      ammunitionStats.velocityMax,
+    )
+    engagedEntityHealthComponent.takeDamage(keneticEnergy)
+  }
+  private canAttack(): boolean {
+    const positionComponent = this.entity.getComponent('Position')
+    if (!positionComponent.isMoving()) return true
+    if (this.weaponStats.useWhileMoving) return true
+    return false
+  }
+  private findBestWeaponStats(): any {
+    const inventoryComponent = this.entity.getComponent('Inventory')
+    if (!inventoryComponent) return Stats.BASIC.FISTS
+    const weaponsStats = inventoryComponent
+      .getItemIds()
+      .map(id => this.networkState.getItem(id))
+      .filter(item => item?.kind.startsWith('WEAPON'))
+      .map(getItemStats)
+    if (weaponsStats === undefined || weaponsStats.length === 0) return Stats.BASIC.FISTS
+    return weaponsStats[0]
+  }
+  private setWeaponStats(weaponStats: any) {
+    this.weaponStats = weaponStats
+  }
+  private checkForSensesDisengage() {
+    if (!this.engagedEntity) return
+    const sensesComponent = this.entity.getComponent('Senses')
+    if (!sensesComponent) return
+    if (sensesComponent.canSense(this.engagedEntity)) return
+    this.disengage()
+  }
+  getNetworkStateRepresentation() {
+    return {
+      state: this.state,
+    }
+  }
+}
+
+export class Health extends TaggedComponent<ComponentTags, Components>('Health') {
+  private health: number = 1
+  takeDamage(keneticEnergy: number) {
+    const damage = keneticEnergy / 400
+    this.health -= damage
+    this.checkStatus()
+  }
+  private checkStatus() {
+    if (this.health <= 0) {
+      this.serverState.deleteEntity(this.entity.id)
+    }
+  }
+  getNetworkStateRepresentation() {
+    return {
+      health: this.health,
     }
   }
 }

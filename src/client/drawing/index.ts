@@ -137,6 +137,10 @@ export class Graphics {
             action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'WEAPON_WIN1906'),
           },
           {
+            text: 'Add Item - .22 Short x 10',
+            action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'AMMO_22_SHORT', { quantity: 10 }),
+          },
+          {
             text: 'Add Item - Boonie',
             action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'BODY_HEAD_BOONIE'),
           },

@@ -29,12 +29,13 @@ export class Actions {
       ...options,
     })
   }
-  addItem(id: string | undefined, kind: string) {
+  addItem(id: string | undefined, kind: string, options?: any) {
     if (id === undefined) return
     this.sendAction({
       action: 'add_item',
       entityId: id,
       kind: kind,
+      ...options,
     })
   }
 }

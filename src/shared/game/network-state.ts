@@ -32,7 +32,7 @@ export class NetworkState extends State {
     this.entities.set(entity.id, entity)
   }
   @Pushable()
-  removeEntity(id: string) {
+  deleteEntity(id: string) {
     this.entities.delete(id)
   }
   getEntities(): NSEntity[] {
@@ -52,10 +52,11 @@ export class NetworkState extends State {
   }
   private items = new Map<string, NSItem>()
   @Pushable()
-  createItem(id: string, kind: string) {
+  createItem(id: string, kind: string, options: any) {
     this.items.set(id, {
       id: id,
       kind: kind,
+      ...options,
     })
   }
   getItem(id: string): NSItem | undefined {

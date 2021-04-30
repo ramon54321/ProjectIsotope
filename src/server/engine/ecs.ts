@@ -26,9 +26,20 @@ export class ECS<CT, T extends keyof CT> {
     this.systems.forEach(system => system.tickSlow())
   }
   createEntity(): Entity<CT, T> {
-    const entity = new Entity<CT, T>(this, this.networkState, IdManager.generateId())
+    const entity = new Entity<CT, T>(this, this.networkState, this.serverState, IdManager.generateId())
     this.entitiesMap.set(entity.id, entity)
     return entity
+  }
+  deleteEntity(id: string): boolean {
+    const entity = this.entitiesMap.get(id)
+    if (!entity) return false
+    Array.from(entity.getComponents()).forEach(component => {
+      const tag = component.getTag()
+      const tagComponentSet = this.entityComponentMap[tag]
+      tagComponentSet.delete(entity)
+    })
+    entity.__setInactive()
+    return this.entitiesMap.delete(id)
   }
   addSystem<S extends System<CT, T>>(
     systemClass: new (ecs: ECS<CT, T>, networkState: NetworkState, serverState: ServerState) => S,
@@ -53,18 +64,27 @@ export class ECS<CT, T extends keyof CT> {
 }
 
 export class Entity<CT, T extends keyof CT> {
+  private isActive = true
   private readonly ecs: ECS<CT, T>
   private readonly networkState: NetworkState
+  private readonly serverState: ServerState
   readonly id: string
   private readonly components: Set<Component<CT, T>> = new Set()
   private readonly componentMap = new Map<T, Component<CT, T>>()
-  constructor(ecs: ECS<CT, T>, networkState: NetworkState, id: string) {
+  constructor(ecs: ECS<CT, T>, networkState: NetworkState, serverState: ServerState, id: string) {
     this.ecs = ecs
     this.networkState = networkState
+    this.serverState = serverState
     this.id = id
   }
+  __setInactive() {
+    this.isActive = false
+  }
+  getIsActive(): boolean {
+    return this.isActive
+  }
   addComponent(component: Component<CT, T>): Entity<CT, T> {
-    component._setup(this, this.networkState)
+    component._setup(this, this.networkState, this.serverState)
     this.components.add(component)
     this.ecs.__addEntityToComponentSet(this, component.getTag())
     this.componentMap.set(component.getTag(), component)
@@ -84,9 +104,11 @@ export class Entity<CT, T extends keyof CT> {
 export class Component<CT, T extends keyof CT> {
   protected entity!: Entity<CT, T>
   protected networkState!: NetworkState
-  _setup(entity: Entity<CT, T>, networkState: NetworkState) {
+  protected serverState!: ServerState
+  _setup(entity: Entity<CT, T>, networkState: NetworkState, serverState: ServerState) {
     this.entity = entity
     this.networkState = networkState
+    this.serverState = serverState
   }
   start() {}
   protected getNetworkStateRepresentation(): any {}
