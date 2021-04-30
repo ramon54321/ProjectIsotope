@@ -19,10 +19,14 @@ export function addText(app: PIXI.Application, text: string, x: number, y: numbe
   return message
 }
 
+type Event = {
+  emitter: EventEmitter
+  event: string
+}
+
 export function addTextLive(
   app: PIXI.Application,
-  eventEmitter: EventEmitter,
-  event: string,
+  updateEvents: Event[],
   update: () => string,
   x: number,
   y: number,
@@ -30,6 +34,6 @@ export function addTextLive(
   anchorY: number = 0.5,
 ) {
   const message = addText(app, update(), x, y, anchorX, anchorY)
-  eventEmitter.on(event, () => (message.text = update()))
+  updateEvents.forEach(updateEvent => updateEvent.emitter.on(updateEvent.event, () => (message.text = update())))
   return message
 }

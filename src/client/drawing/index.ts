@@ -14,6 +14,7 @@ import { Timer } from '../timer'
 import { Selection } from '../selection'
 import { Interaction, MenuItem } from '../interaction'
 import { getEntityDetails } from './ui'
+import EventEmitter from 'node:events'
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
@@ -46,6 +47,7 @@ class EntityLibrary {
 export class Graphics {
   private readonly networkState: NetworkState
   private readonly actions: Actions
+  private readonly events: EventEmitter
 
   private readonly app: PIXI.Application
   private readonly ui: any = {}
@@ -57,9 +59,10 @@ export class Graphics {
   private interaction!: Interaction
   private camera!: Camera
 
-  constructor(networkState: NetworkState, actions: Actions) {
+  constructor(networkState: NetworkState, actions: Actions, events: EventEmitter) {
     this.networkState = networkState
     this.actions = actions
+    this.events = events
     PIXI.utils.skipHello()
     this.app = new PIXI.Application({
       autoDensity: true,
@@ -187,8 +190,12 @@ export class Graphics {
   private createUI() {
     this.ui.textServerTickRate = addTextLive(
       this.app,
-      this.networkState.getEventEmitter(),
-      'setServerTickRate',
+      [
+        {
+          emitter: this.networkState.getEventEmitter(),
+          event: 'setServerTickRate',
+        },
+      ],
       () => 'Tick Rate: ' + this.networkState.getServerTickRate().toFixed(0),
       -HALF_WIDTH + PADDING_LEFT,
       -HALF_HEIGHT + PADDING_TOP + 16 * 0,
@@ -196,8 +203,12 @@ export class Graphics {
     )
     this.ui.textEntityId = addTextLive(
       this.app,
-      this.selection.getEventEmitter(),
-      'entity',
+      [
+        {
+          emitter: this.selection.getEventEmitter(),
+          event: 'entity',
+        },
+      ],
       () => 'Selected EntityID: ' + (this.selection.getSelectedEntity()?.id || 'None'),
       -HALF_WIDTH + PADDING_LEFT,
       -HALF_HEIGHT + PADDING_TOP + 16 * 1,
@@ -205,8 +216,12 @@ export class Graphics {
     )
     this.ui.textWorldName = addTextLive(
       this.app,
-      this.networkState.getEventEmitter(),
-      'setWorldName',
+      [
+        {
+          emitter: this.networkState.getEventEmitter(),
+          event: 'setWorldName',
+        },
+      ],
       () => 'World Name: ' + this.networkState.getWorldName(),
       -HALF_WIDTH + PADDING_LEFT,
       -HALF_HEIGHT + PADDING_TOP + 16 * 2,
@@ -214,8 +229,16 @@ export class Graphics {
     )
     this.ui.selectedEntityDetails = addTextLive(
       this.app,
-      this.selection.getEventEmitter(),
-      'entity',
+      [
+        {
+          emitter: this.selection.getEventEmitter(),
+          event: 'entity',
+        },
+        {
+          emitter: this.events,
+          event: 'state',
+        },
+      ],
       () => {
         const entity = this.selection.getHoverEntity() || this.selection.getSelectedEntity()
         return getEntityDetails(this.networkState, entity)
