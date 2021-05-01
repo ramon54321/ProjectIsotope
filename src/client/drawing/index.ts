@@ -30,6 +30,16 @@ class EntityLibrary {
         main.addChild(displayName)
       }
       return main
+    } else if (entity.kind.includes('BUILDING')) {
+      const dimensions = entity.components.get('Dimension')
+      if (dimensions === undefined) throw new Error('No dimensions on building entity')
+      const main = addRect(app, 0, 0, dimensions.width, dimensions.height, 0xeeeeee)
+      const displayNameText = entity.components.get('Identity')?.displayName
+      if (displayNameText !== undefined) {
+        const displayName = addText(app, displayNameText, 0, dimensions.height / 2 + 12, 0.5)
+        main.addChild(displayName)
+      }
+      return main
     } else {
       const body = new PIXI.Sprite(app.loader.resources['res/body1.png'].texture)
       body.anchor.set(0.5, 0.5)
@@ -124,6 +134,14 @@ export class Graphics {
       {
         text: 'Spawn Pawn Team 1',
         action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'Pawn', { team: 1 }),
+      },
+      {
+        text: 'Spawn Settlement Team 0',
+        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'BUILDING_SETTLEMENT', { team: 0 }),
+      },
+      {
+        text: 'Spawn Settlement Team 1',
+        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'BUILDING_SETTLEMENT', { team: 1 }),
       },
     ]
     this.app.ticker.add(() => {

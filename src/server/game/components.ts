@@ -6,15 +6,17 @@ import { getKeneticEnergy } from './ballistics'
 import { Entity } from './server-state'
 import { getItemStats } from './utils'
 
-export const components = ['Position', 'Identity', 'Team', 'Senses', 'Inventory', 'Combat', 'Health'] as const
+export const components = ['Position', 'Identity', 'Movement', 'Team', 'Senses', 'Inventory', 'Combat', 'Health', 'Dimension'] as const
 export type ComponentTags = {
   Position: Position
   Identity: Identity
+  Movement: Movement
   Team: Team
   Senses: Senses
   Inventory: Inventory
   Combat: Combat
   Health: Health
+  Dimension: Dimension
 }
 export type Components = typeof components[number]
 
@@ -66,6 +68,18 @@ export class Position extends TaggedComponent<ComponentTags, Components>('Positi
     this.targetPosition.x = x
     this.targetPosition.y = y
   }
+}
+
+export class Movement extends TaggedComponent<ComponentTags, Components>('Movement') {
+  private readonly speed: number
+  constructor(speed: number) {
+    super()
+    this.speed = speed
+  }
+  getSpeed(): number {
+    return this.speed
+  }
+  getNetworkStateRepresentation() {}
 }
 
 export class Team extends TaggedComponent<ComponentTags, Components>('Team') {
@@ -245,6 +259,22 @@ export class Health extends TaggedComponent<ComponentTags, Components>('Health')
   getNetworkStateRepresentation() {
     return {
       health: this.health,
+    }
+  }
+}
+
+export class Dimension extends TaggedComponent<ComponentTags, Components>('Dimension') {
+  private readonly width: number
+  private readonly height: number
+  constructor(width: number, height: number) {
+    super()
+    this.width = width
+    this.height = height
+  }
+  getNetworkStateRepresentation() {
+    return {
+      width: this.width,
+      height: this.height,
     }
   }
 }
