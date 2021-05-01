@@ -9,7 +9,7 @@ import { addText, addTextLive } from './text'
 import { Input } from './input'
 import { Camera } from '../camera'
 import { HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
-import { Actions } from '../actions'
+import { Actions, UIState } from '../actions'
 import { Timer } from '../timer'
 import { Selection } from '../selection'
 import { Interaction, MenuItem } from '../interaction'
@@ -22,6 +22,7 @@ const PADDING_TOP = 16
 class EntityLibrary {
   static getGraphics(app: PIXI.Application, entity: NSEntity) {
     const simpleKinds = ['Dummy', 'Pawn']
+
     if (simpleKinds.includes(entity.kind)) {
       const main = addCircle(app, 0, 0, 8)
       const displayNameText = entity.components.get('Identity')?.displayName
@@ -122,70 +123,103 @@ export class Graphics {
   }
   private createInteraction() {
     this.interaction = new Interaction(this.app)
-    const menuBase: MenuItem[] = [
-      {
-        text: 'Spawn Dummy',
-        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'Dummy'),
-      },
-      {
-        text: 'Spawn Pawn Team 0',
-        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'Pawn', { team: 0 }),
-      },
-      {
-        text: 'Spawn Pawn Team 1',
-        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'Pawn', { team: 1 }),
-      },
-      {
-        text: 'Spawn Settlement Team 0',
-        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'BUILDING_SETTLEMENT', { team: 0 }),
-      },
-      {
-        text: 'Spawn Settlement Team 1',
-        action: (worldPosition: Vec2) => this.actions.spawnEntity(worldPosition, 'BUILDING_SETTLEMENT', { team: 1 }),
-      },
-    ]
     this.app.ticker.add(() => {
       const selectedEntity = this.selection.getSelectedEntity()
       const hoverEntity = this.selection.getHoverEntity()
       const cameraPosition = this.camera.getPosition()
       const mouseScreenPosition = this.input.getMouseScreenPosition(this.app)
+      const mouseWorldPosition = this.input.getMouseWorldPosition(this.app, cameraPosition)
+      const uiState: UIState = {
+        mouseScreenPosition: mouseScreenPosition,
+        mouseWorldPosition: mouseWorldPosition,
+        selectedEntity: selectedEntity!,
+        hoverEntity: hoverEntity!,
+      }
+
       this.ui.background.on('mouseup', () => this.interaction.close())
       const shouldOpenMenu = this.input.getInputOnce('e')
+
+      /**
+       *
+       * No Selection
+       *  No Hover      General
+       *  Hover         General + Hover
+       *
+       * Selection
+       *  No Hover      General + Selection(With No Hover)
+       *  Hover         General + Selection(With No Hover) + Selection(With Hover) + Hover
+       *
+       */
+
       if (shouldOpenMenu && selectedEntity && hoverEntity) {
-        this.interaction.toggle(cameraPosition, mouseScreenPosition, [
+        const abilitiesActions = Array.from(selectedEntity.components.values())
+          .map(component => component.abilities)
+          .filter(abilities => abilities !== undefined)
+          .reduce((acc, abilities) => abilities.concat(acc), [])
+          .map((ability: any) => ({
+            text: ability.text,
+            action: (uiState: UIState) => (this.actions as any)[ability.method]?.(uiState),
+          }))
+        const devActions = [
           {
             text: 'Add Item - Win 1906',
-            action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'WEAPON_WIN1906'),
+            action: (uiState: UIState) => this.actions.addItem(uiState, { kind: 'WEAPON_WIN1906' }),
           },
           {
             text: 'Add Item - .22 Short x 10',
-            action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'AMMO_22_SHORT', { quantity: 10 }),
+            action: (uiState: UIState) => this.actions.addItem(uiState, { kind: 'AMMO_22_SHORT', quantity: 10 }),
           },
           {
             text: 'Add Item - Boonie',
-            action: (worldPosition: Vec2) => this.actions.addItem(this.selection.getHoverEntity()?.id, 'BODY_HEAD_BOONIE'),
+            action: (uiState: UIState) => this.actions.addItem(uiState, { kind: 'BODY_HEAD_BOONIE' }),
           },
-        ])
+        ]
+        this.interaction.toggle(mouseScreenPosition, uiState, abilitiesActions.concat(devActions))
       } else if (shouldOpenMenu && selectedEntity) {
-        this.interaction.toggle(cameraPosition, mouseScreenPosition, [
-          {
-            text: 'Move',
-            action: (worldPosition: Vec2) => this.actions.moveEntity(this.selection.getSelectedEntity()?.id, worldPosition),
-          },
-        ])
+        const abilitiesActions = Array.from(selectedEntity.components.values())
+          .map(component => component.abilities)
+          .filter(abilities => abilities !== undefined)
+          .reduce((acc, abilities) => abilities.concat(acc), [])
+          .map((ability: any) => ({
+            text: ability.text,
+            action: (uiState: UIState) => (this.actions as any)[ability.method]?.(uiState),
+          }))
+        this.interaction.toggle(mouseScreenPosition, uiState, abilitiesActions)
       } else if (shouldOpenMenu) {
-        this.interaction.toggle(cameraPosition, mouseScreenPosition, menuBase)
+        const devActions = [
+          {
+            text: 'Spawn Dummy',
+            action: (uiState: UIState) => this.actions.spawnEntity(uiState, { kind: 'Pawn' }),
+          },
+          {
+            text: 'Spawn Pawn Team 0',
+            action: (uiState: UIState) => this.actions.spawnEntity(uiState, { kind: 'Pawn', team: 0 }),
+          },
+          {
+            text: 'Spawn Pawn Team 1',
+            action: (uiState: UIState) => this.actions.spawnEntity(uiState, { kind: 'Pawn', team: 1 }),
+          },
+          {
+            text: 'Spawn Settlement Team 0',
+            action: (uiState: UIState) => this.actions.spawnEntity(uiState, { kind: 'BUILDING_SETTLEMENT', team: 0 }),
+          },
+          {
+            text: 'Spawn Settlement Team 1',
+            action: (uiState: UIState) => this.actions.spawnEntity(uiState, { kind: 'BUILDING_SETTLEMENT', team: 1 }),
+          },
+        ]
+        this.interaction.toggle(mouseScreenPosition, uiState, devActions)
       }
     })
   }
   private createInput() {
     this.app.ticker.add(() => {
-      const selectedEntity = this.selection.getSelectedEntity()
-      const cameraPosition = this.camera.getPosition()
-      const mouseWorldPosition = this.input.getMouseWorldPosition(this.app, cameraPosition)
-      if (selectedEntity && this.input.getInputOnce('m')) {
-        this.actions.moveEntity(selectedEntity.id, mouseWorldPosition)
-      }
+      // const selectedEntity = this.selection.getSelectedEntity()
+      // const cameraPosition = this.camera.getPosition()
+      // const mouseWorldPosition = this.input.getMouseWorldPosition(this.app, cameraPosition)
+      // if (selectedEntity && this.input.getInputOnce('m')) {
+      //   this.actions.moveEntity(selectedEntity.id, mouseWorldPosition)
+      // }
     })
   }
   private createBackground() {

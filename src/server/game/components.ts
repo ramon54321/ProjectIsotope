@@ -79,7 +79,15 @@ export class Movement extends TaggedComponent<ComponentTags, Components>('Moveme
   getSpeed(): number {
     return this.speed
   }
-  getNetworkStateRepresentation() {}
+  getNetworkStateRepresentation() {
+    return {
+      abilities: [{
+        text: 'Move',
+        method: 'moveEntity',
+        required: ['selected']
+      }],
+    }
+  }
 }
 
 export class Team extends TaggedComponent<ComponentTags, Components>('Team') {
@@ -218,13 +226,13 @@ export class Combat extends TaggedComponent<ComponentTags, Components>('Combat')
   }
   private findBestWeaponStats(): any {
     const inventoryComponent = this.entity.getComponent('Inventory')
-    if (!inventoryComponent) return Stats.BASIC.FISTS
+    if (!inventoryComponent) return Stats.Basic.FISTS
     const weaponsStats = inventoryComponent
       .getItemIds()
       .map(id => this.networkState.getItem(id))
       .filter(item => item?.kind.startsWith('WEAPON'))
       .map(getItemStats)
-    if (weaponsStats === undefined || weaponsStats.length === 0) return Stats.BASIC.FISTS
+    if (weaponsStats === undefined || weaponsStats.length === 0) return Stats.Basic.FISTS
     return weaponsStats[0]
   }
   private setWeaponStats(weaponStats: any) {

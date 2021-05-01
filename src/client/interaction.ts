@@ -1,11 +1,12 @@
 import EventEmitter from 'events'
 import * as PIXI from 'pixi.js'
 import { Vec2 } from '../shared/engine/math'
+import { UIState } from './actions'
 import { addMenu } from './drawing/menu'
 
 export type MenuItem = {
   text: string
-  action: (worldPosition: Vec2) => void
+  action: (uiState: UIState) => void
 }
 
 export class Interaction {
@@ -23,18 +24,17 @@ export class Interaction {
     this.app.stage.removeChild(this.container)
     this.container = undefined
   }
-  toggle(cameraPosition: Vec2, screenPosition: Vec2, items: MenuItem[]) {
+  toggle(screenPosition: Vec2, uiState: UIState, items: MenuItem[]) {
     if (this.container) return this.close()
-    const worldPosition = new Vec2(screenPosition.x + cameraPosition.x, screenPosition.y + cameraPosition.y)
-    this.spawn(screenPosition, worldPosition, items)
+    this.spawn(screenPosition, uiState, items)
   }
-  private spawn(screenPosition: Vec2, worldPosition: Vec2, items: MenuItem[]) {
+  private spawn(screenPosition: Vec2, uiState: UIState, items: MenuItem[]) {
     this.container = addMenu(
       this.app,
       items,
       screenPosition.x,
       screenPosition.y,
-      item => item.action(worldPosition),
+      item => item.action(uiState),
       () => this.close(),
     )
   }

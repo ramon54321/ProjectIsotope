@@ -22,9 +22,19 @@ export const Stats = {
       protectionMelee: 0.01,
     },
   },
-  BASIC: {
+  Basic: {
     FISTS: {
       keneticEnergy: 0,
     },
   },
+  Abilities: {
+    Movement: {
+
+    }
+  }
 }
+
+export type EntityTag = keyof typeof Stats.Entities
+export type ItemTag = keyof typeof Stats.Items
+export type BasicTag = keyof typeof Stats.Basic
+export type AbilityTag = keyof typeof Stats.Abilities
