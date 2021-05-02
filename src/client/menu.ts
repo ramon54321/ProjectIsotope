@@ -3,7 +3,10 @@ import { Interaction, MenuItem } from './interaction'
 
 export class Menu {
   private readonly abilityRequirementMap: any = {
-    moveEntity: ['selection'],
+    moveEntity: {
+      required: ['selection'],
+      unallowed: ['hoverSelf'],
+    },
   }
   private getAbilityActions(uiState: UIState, actions: Actions, available: string[]): MenuItem[] {
     const actionEntity = uiState.selectedEntity || uiState.hoverEntity
@@ -13,9 +16,11 @@ export class Menu {
         .filter(abilities => abilities !== undefined)
         .reduce((acc, abilities) => abilities.concat(acc), [])
         .filter((ability: any) => {
-          const abilityRequired = this.abilityRequirementMap[ability.method]
+          const abilityRequired = this.abilityRequirementMap[ability.method]?.required
+          const abilityUnallowed = this.abilityRequirementMap[ability.method]?.unallowed
           if (!abilityRequired) return true
-          return abilityRequired.every((x: string) => available.includes(x))
+          if (!abilityUnallowed) return true
+          return abilityRequired.every((x: string) => available.includes(x)) && !abilityUnallowed.some((x: string) => available.includes(x))
         })
         .map((ability: any) => ({
           text: ability.text,

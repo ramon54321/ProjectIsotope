@@ -30,7 +30,7 @@ export function getEntityDetails(networkState: NetworkState, entity: NSEntity | 
     },
     {
       name: 'Inventory',
-      value: inventory,
+      value: inventory.length > 0 ? inventory : undefined,
     },
   ]
   return list
