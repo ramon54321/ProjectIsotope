@@ -42,6 +42,13 @@ export class ServerState {
   addItem(entityId: string, kind: ItemTag, options: any) {
     const entity = this.ecs.getEntityById(entityId)
     if (!entity) return
+    const existingItem = entity.getComponent('Inventory')?.getFirstItemOfKind(kind)
+    if (existingItem) {
+      existingItem.quantity = existingItem.quantity || 1
+      existingItem.quantity += options.quantity || 1
+      this.networkState.updateItem(existingItem)
+      return
+    }
     const id = IdManager.generateId()
     this.networkState.createItem(id, kind, options)
     entity.getComponent('Inventory')?.addItem(id)
