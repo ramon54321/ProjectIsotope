@@ -5,21 +5,25 @@ type DisplayListItem = {
   name?: string
   value: string
 }
+
+function getArrayDetails(arr: any[]): any {
+  if (arr === undefined || !Array.isArray(arr)) return undefined
+  if (arr.length > 0) return arr
+}
+
 export function getEntityDetails(networkState: NetworkState, entity: NSEntity | undefined): string {
   if (entity === undefined) return ''
   const displayName = entity.components.get('Identity')?.displayName
   const speed = (Stats.Entities as any)[entity.kind]?.speed
-  const inventory = entity.components
-    .get('Inventory')
-    ?.items.map((id: string) => {
-      const item = networkState.getItem(id) as any
-      if (item === undefined) return 'unknown'
-      const itemKind = item.kind
-      const label = (Stats.Items as any)[itemKind]?.displayName || 'unknown'
-      const quantity = item.quantity
-      return `${label}${quantity ? ' x' + quantity : ''}`
-    })
-    .join('\n\t')
+  const factory = entity.components.get('Factory')?.orders.map((order: any) => `${order.kind}: ${(order.percent * 100).toFixed(0)}%`)
+  const inventory = entity.components.get('Inventory')?.items.map((id: string) => {
+    const item = networkState.getItem(id) as any
+    if (item === undefined) return 'unknown'
+    const itemKind = item.kind
+    const label = (Stats.Items as any)[itemKind]?.displayName || 'unknown'
+    const quantity = item.quantity
+    return `${label}${quantity ? ' x' + quantity : ''}`
+  })
   const list: DisplayListItem[] = [
     {
       value: displayName,
@@ -29,8 +33,12 @@ export function getEntityDetails(networkState: NetworkState, entity: NSEntity | 
       value: speed,
     },
     {
+      name: 'Production',
+      value: getArrayDetails(factory)?.join('\n\t'),
+    },
+    {
       name: 'Inventory',
-      value: inventory.length > 0 ? inventory : undefined,
+      value: getArrayDetails(inventory)?.join('\n\t'),
     },
   ]
   return list

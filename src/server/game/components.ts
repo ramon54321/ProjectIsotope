@@ -327,6 +327,7 @@ export class Factory extends TaggedComponent<ComponentTags, Components>('Factory
       this.produceEntity(this.orders[0].kind)
       this.orders.shift()
     }
+    this.updateNetworkState()
   }
   private produceEntity(kind: EntityTag) {
     const team = this.entity.getComponent('Team')?.getTeam()
@@ -334,7 +335,10 @@ export class Factory extends TaggedComponent<ComponentTags, Components>('Factory
   }
   getNetworkStateRepresentation() {
     return {
-      orders: this.orders,
+      orders: this.orders.map(order => ({
+        kind: order.kind,
+        percent: order.elapsedSeconds / Stats.Entities[order.kind]?.productionSeconds,
+      })),
       abilities: this.orderOptions.map(orderOption => ({
         text: `Order ${Stats.Entities[orderOption]?.displayName}`,
         method: 'submitOrder',
