@@ -84,7 +84,6 @@ export class Movement extends TaggedComponent<ComponentTags, Components>('Moveme
       abilities: [{
         text: 'Move',
         method: 'moveEntity',
-        required: ['selected']
       }],
     }
   }
