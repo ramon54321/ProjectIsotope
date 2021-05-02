@@ -8,7 +8,6 @@ app.on('ready', () => {
     }
   })
   window.loadFile('index.html')
-  window.webContents.openDevTools()
   window.setSize(1400, 1000)
 })
 

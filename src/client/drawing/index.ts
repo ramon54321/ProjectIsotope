@@ -57,12 +57,22 @@ class EntityLibrary {
   }
 }
 
+class ClientState {
+  private isDevMode = false
+  toggleDevMode() {
+    this.isDevMode = !this.isDevMode
+  }
+  getIsDevMode(): boolean {
+    return this.isDevMode
+  }
+}
+
 export class Graphics {
   private readonly networkState: NetworkState
   private readonly actions: Actions
   private readonly events: EventEmitter
-
   private readonly app: PIXI.Application
+  private readonly clientState: ClientState = new ClientState()
   private readonly ui: any = {}
   private readonly input = new Input()
   private readonly entitiesRegistry = new DirtRegistry()
@@ -92,6 +102,7 @@ export class Graphics {
   start() {
     this.setStageCenter()
     this.createCamera()
+    this.createClientState()
     this.createInteraction()
     this.createInput()
     this.createBackground()
@@ -123,6 +134,13 @@ export class Graphics {
   private createCamera() {
     this.camera = new Camera(this.input)
     this.app.ticker.add(delta => this.camera.render(delta))
+  }
+  private createClientState() {
+    this.app.ticker.add(delta => {
+      if (this.input.getInputOnce('p')) {
+        this.clientState.toggleDevMode()
+      }
+    })
   }
   private createInteraction() {
     this.interaction = new Interaction(this.app)
@@ -187,6 +205,14 @@ export class Graphics {
     })
   }
   private createUI() {
+    this.ui.helpReload = addText(this.app, 'Press CMD+R to reload...', -HALF_WIDTH + PADDING_LEFT, HALF_HEIGHT - PADDING_TOP - 16 * 1, 0)
+    this.ui.helpReload = addText(
+      this.app,
+      'Press P to enter Dev Mode...',
+      -HALF_WIDTH + PADDING_LEFT,
+      HALF_HEIGHT - PADDING_TOP - 16 * 0,
+      0,
+    )
     this.ui.textServerTickRate = addTextLive(
       this.app,
       [
