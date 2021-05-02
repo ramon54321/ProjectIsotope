@@ -1,12 +1,23 @@
 import { Vec2 } from '../../shared/engine/math'
 import { NSItem } from '../../shared/game/network-state'
-import { Stats } from '../../shared/game/stats'
+import { EntityTag, Stats } from '../../shared/game/stats'
 import { TaggedComponent } from '../engine/ecs'
 import { getKeneticEnergy } from './ballistics'
 import { Entity } from './server-state'
 import { getItemStats } from './utils'
 
-export const components = ['Position', 'Identity', 'Movement', 'Team', 'Senses', 'Inventory', 'Combat', 'Health', 'Dimension'] as const
+export const components = [
+  'Position',
+  'Identity',
+  'Movement',
+  'Team',
+  'Senses',
+  'Inventory',
+  'Combat',
+  'Health',
+  'Dimension',
+  'Factory',
+] as const
 export type ComponentTags = {
   Position: Position
   Identity: Identity
@@ -17,6 +28,7 @@ export type ComponentTags = {
   Combat: Combat
   Health: Health
   Dimension: Dimension
+  Factory: Factory
 }
 export type Components = typeof components[number]
 
@@ -81,10 +93,12 @@ export class Movement extends TaggedComponent<ComponentTags, Components>('Moveme
   }
   getNetworkStateRepresentation() {
     return {
-      abilities: [{
-        text: 'Move',
-        method: 'moveEntity',
-      }],
+      abilities: [
+        {
+          text: 'Move',
+          method: 'moveEntity',
+        },
+      ],
     }
   }
 }
@@ -282,6 +296,52 @@ export class Dimension extends TaggedComponent<ComponentTags, Components>('Dimen
     return {
       width: this.width,
       height: this.height,
+    }
+  }
+}
+
+interface Order {
+  kind: EntityTag
+  elapsedSeconds: number
+}
+export class Factory extends TaggedComponent<ComponentTags, Components>('Factory') {
+  private readonly orderOptions: EntityTag[] = []
+  private readonly orders: Order[] = []
+  constructor(orderOptions: EntityTag[]) {
+    super()
+    this.orderOptions = orderOptions
+  }
+  submitOrder(kind: EntityTag) {
+    this.orders.push({
+      kind: kind,
+      elapsedSeconds: 0,
+    })
+    this.updateNetworkState()
+  }
+  tick() {
+    if (this.orders.length <= 0) return
+    const incrementSeconds = 1 / this.networkState.getServerTickRate()
+    this.orders[0].elapsedSeconds += incrementSeconds
+    const productionSeconds = Stats.Entities[this.orders[0].kind].productionSeconds
+    if (this.orders[0].elapsedSeconds >= productionSeconds) {
+      this.produceEntity(this.orders[0].kind)
+      this.orders.shift()
+    }
+  }
+  private produceEntity(kind: EntityTag) {
+    const team = this.entity.getComponent('Team')?.getTeam()
+    this.serverState.createEntity(kind, { team: team || -1 })
+  }
+  getNetworkStateRepresentation() {
+    return {
+      orders: this.orders,
+      abilities: this.orderOptions.map(orderOption => ({
+        text: `Order ${Stats.Entities[orderOption]?.displayName}`,
+        method: 'submitOrder',
+        options: {
+          kind: orderOption,
+        },
+      })),
     }
   }
 }

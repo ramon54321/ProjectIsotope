@@ -1,5 +1,5 @@
 import { Vec2 } from '../../shared/engine/math'
-import { Combat, Dimension, Health, Identity, Inventory, Movement, Position, Senses, Team } from './components'
+import { Combat, Dimension, Factory, Health, Identity, Inventory, Movement, Position, Senses, Team } from './components'
 import { ECS } from './server-state'
 
 export const Library = {
@@ -42,6 +42,7 @@ export const Library = {
           .addComponent(new Senses(['Range'], 100))
           .addComponent(new Inventory())
           .addComponent(new Health())
+          .addComponent(new Factory(['Pawn']))
       },
     },
   },

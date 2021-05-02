@@ -7,24 +7,27 @@ export class Menu {
       required: ['selection'],
       unallowed: ['hoverSelf'],
     },
+    submitOrder: {
+      required: ['selection', 'hoverSelf'],
+    },
   }
   private getAbilityActions(uiState: UIState, actions: Actions, available: string[]): MenuItem[] {
     const actionEntity = uiState.selectedEntity || uiState.hoverEntity
     if (actionEntity) {
-      return Array.from(uiState.selectedEntity.components.values())
+      return Array.from(actionEntity.components.values())
         .map(component => component.abilities)
         .filter(abilities => abilities !== undefined)
         .reduce((acc, abilities) => abilities.concat(acc), [])
         .filter((ability: any) => {
           const abilityRequired = this.abilityRequirementMap[ability.method]?.required
           const abilityUnallowed = this.abilityRequirementMap[ability.method]?.unallowed
-          if (!abilityRequired) return true
-          if (!abilityUnallowed) return true
-          return abilityRequired.every((x: string) => available.includes(x)) && !abilityUnallowed.some((x: string) => available.includes(x))
+          const _required = abilityRequired || []
+          const unallowed = abilityUnallowed || []
+          return _required.every((x: string) => available.includes(x)) && !unallowed.some((x: string) => available.includes(x))
         })
         .map((ability: any) => ({
           text: ability.text,
-          action: (uiState: UIState) => (actions as any)[ability.method]?.(uiState),
+          action: (uiState: UIState) => (actions as any)[ability.method]?.(uiState, ability.options),
         }))
     }
     return []

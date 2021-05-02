@@ -1,10 +1,11 @@
 import { Vec2 } from '../../shared/engine/math'
 import { NetworkState } from '../../shared/game/network-state'
+import { EntityTag, ItemTag } from '../../shared/game/stats'
 import { ECS as ECSECS, Entity as ECSEntity } from '../engine/ecs'
 import { IdManager } from '../engine/id-manager'
 import { components, Components, ComponentTags } from './components'
 import { Library } from './library'
-import { Combat, Movement, Reaction } from './systems'
+import { Combat, Factories, Movement, Reaction } from './systems'
 
 export type Entity = ECSEntity<ComponentTags, Components>
 export type ECS = ECSECS<ComponentTags, Components>
@@ -18,6 +19,7 @@ export class ServerState {
       .addSystem(Movement)
       .addSystem(Reaction)
       .addSystem(Combat)
+      .addSystem(Factories)
   }
   tickEcs() {
     this.ecs.tick()
@@ -25,7 +27,7 @@ export class ServerState {
   tickSlowEcs() {
     this.ecs.tickSlow()
   }
-  createEntity(kind: keyof typeof Library.Entities, options: any) {
+  createEntity(kind: EntityTag, options: { position?: Vec2; team?: number }) {
     const entity = Library.Entities[kind].constructor(this.ecs, options)
     this.networkState.createEntity(entity.id, kind)
     entity.getComponents().forEach(component => component.updateNetworkState())
@@ -37,11 +39,16 @@ export class ServerState {
   setEntityMoveTarget(entityId: string, target: Vec2) {
     this.ecs.getEntityById(entityId)?.getComponent('Position')?.setTargetPosition(target.x, target.y)
   }
-  addItem(entityId: string, kind: string, options: any) {
+  addItem(entityId: string, kind: ItemTag, options: any) {
     const entity = this.ecs.getEntityById(entityId)
     if (!entity) return
     const id = IdManager.generateId()
     this.networkState.createItem(id, kind, options)
     entity.getComponent('Inventory')?.addItem(id)
+  }
+  submitOrder(entityId: string, kind: EntityTag, options: any) {
+    const entity = this.ecs.getEntityById(entityId)
+    if (!entity) return
+    entity.getComponent('Factory')?.submitOrder(kind)
   }
 }

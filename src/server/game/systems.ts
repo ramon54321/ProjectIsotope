@@ -58,3 +58,12 @@ export class Combat extends System {
     combatComponent.tickSlow()
   }
 }
+
+export class Factories extends System {
+  protected readonly dependentComponentTags = ['Factory'] as const
+  onTick(entitySelf: Entity) {
+    const factoryComponent = entitySelf.getComponent('Factory')
+    factoryComponent.tick()
+  }
+  onTickSlow(entitySelf: Entity) {}
+}

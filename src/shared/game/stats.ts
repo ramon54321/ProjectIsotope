@@ -1,7 +1,9 @@
 export const Stats = {
   Entities: {
     Pawn: {
+      displayName: 'Simple Pawn',
       speed: 50,
+      productionSeconds: 8,
     },
   },
   Items: {

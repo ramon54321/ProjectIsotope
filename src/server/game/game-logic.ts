@@ -23,8 +23,10 @@ export class GameLogic {
         this.serverState.setEntityMoveTarget(actionPayload.entityId, actionPayload.target)
       } else if (actionPayload.action === 'spawn') {
         this.serverState.createEntity(actionPayload.kind, actionPayload)
-      } else if (actionPayload.action === 'add_item') {
+      } else if (actionPayload.action === 'addItem') {
         this.serverState.addItem(actionPayload.entityId, actionPayload.kind, actionPayload)
+      } else if (actionPayload.action === 'submitOrder') {
+        this.serverState.submitOrder(actionPayload.entityId, actionPayload.kind, actionPayload)
       }
       actionPayload = this.actionPayloadQueue.shift()
     }

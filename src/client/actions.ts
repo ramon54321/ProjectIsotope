@@ -41,8 +41,17 @@ export class Actions {
   addItem(uiState: UIState, options?: any) {
     if (uiState.hoverEntity.id === undefined) return
     this.sendAction({
-      action: 'add_item',
+      action: 'addItem',
       entityId: uiState.hoverEntity.id,
+      kind: options?.kind || 'unknown',
+      ...options,
+    })
+  }
+  submitOrder(uiState: UIState, options?: any) {
+    if (uiState.selectedEntity.id === undefined) return
+    this.sendAction({
+      action: 'submitOrder',
+      entityId: uiState.selectedEntity.id,
       kind: options?.kind || 'unknown',
       ...options,
     })
