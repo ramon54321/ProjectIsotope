@@ -331,7 +331,7 @@ export class Factory extends TaggedComponent<ComponentTags, Components>('Factory
   }
   private produceEntity(kind: EntityTag) {
     const team = this.entity.getComponent('Team')?.getTeam()
-    this.serverState.createEntity(kind, { team: team || -1 })
+    this.serverState.createEntity(kind, { team: team !== undefined ? team : -1 })
   }
   getNetworkStateRepresentation() {
     return {

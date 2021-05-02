@@ -20,6 +20,7 @@ network.on('action', payload => {
 })
 
 networkState.setServerTickRate(TICK_RATE)
+networkState.setTeams(['Blue', 'Red', 'Yellow'])
 
 setInterval(tick, 1000 / networkState.getServerTickRate())
 

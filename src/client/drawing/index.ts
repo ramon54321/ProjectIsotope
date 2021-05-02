@@ -21,10 +21,12 @@ const PADDING_LEFT = 16
 const PADDING_TOP = 16
 
 class EntityLibrary {
-  static getGraphics(app: PIXI.Application, entity: NSEntity) {
+  static getGraphics(app: PIXI.Application, entity: NSEntity, networkState: NetworkState) {
     const simpleKinds = ['Dummy', 'Pawn']
+    const team = entity.components.get('Team')?.team
+    const colorName = networkState.getTeams()[team]
     if (simpleKinds.includes(entity.kind)) {
-      const main = addCircle(app, 0, 0, 8)
+      const main = addCircle(app, 0, 0, 8, colorName)
       const displayNameText = entity.components.get('Identity')?.displayName
       if (displayNameText !== undefined) {
         const displayName = addText(app, displayNameText, 0, 20, 0.5)
@@ -34,7 +36,7 @@ class EntityLibrary {
     } else if (entity.kind.includes('BUILDING')) {
       const dimensions = entity.components.get('Dimension')
       if (dimensions === undefined) throw new Error('No dimensions on building entity')
-      const main = addRect(app, 0, 0, dimensions.width, dimensions.height, 0xeeeeee)
+      const main = addRect(app, 0, 0, dimensions.width, dimensions.height, colorName)
       const displayNameText = entity.components.get('Identity')?.displayName
       if (displayNameText !== undefined) {
         const displayName = addText(app, displayNameText, 0, dimensions.height / 2 + 12, 0.5)
@@ -248,7 +250,7 @@ export class Graphics {
   }
   private createEntities() {
     const createEntity = (entity: NSEntity, cameraPosition: Vec2) => {
-      const graphics = EntityLibrary.getGraphics(this.app, entity) as any
+      const graphics = EntityLibrary.getGraphics(this.app, entity, this.networkState) as any
       graphics.interactive = true
       graphics.on('mouseup', () => this.selection.setSelectedEntity(entity))
       graphics.on('mouseover', () => this.selection.setHoverEntity(entity))

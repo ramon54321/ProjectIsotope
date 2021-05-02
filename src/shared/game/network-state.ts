@@ -20,6 +20,14 @@ export class NetworkState extends State {
   getServerTickRate(): number {
     return this.serverTickRate
   }
+  private teams: string[] = []
+  @Pushable()
+  setTeams(value: string[]) {
+    this.teams = value
+  }
+  getTeams(): string[] {
+    return this.teams
+  }
   private entities = new Map<string, NSEntity>()
   @Pushable()
   createEntity(id: string, kind: string) {
