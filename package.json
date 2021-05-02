@@ -1,5 +1,9 @@
 {
   "main": "launcher.js",
+  "scripts": {
+    "package": "package.bash",
+    "run:production": "open out/isotope-darwin-x64/isotope.app"
+  },
   "devDependencies": {
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.168",
