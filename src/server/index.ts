@@ -9,7 +9,7 @@ const TICKS_PER_SLOW_TICK = 5
 
 const network = new NetServer(8081)
 const networkState = new NetworkState('WRITER')
-const serverState = new ServerState(networkState)
+const serverState = new ServerState(networkState, (payload: any) => sendClassBInstant(network, payload))
 const gameLogic = new GameLogic(serverState)
 network.open()
 
@@ -50,6 +50,14 @@ function sendDeltaState(network: NetServer, state: any) {
     payload: {
       actions: state.popActions(),
     },
+  }
+  network.emitOnAllClients(message)
+}
+
+function sendClassBInstant(network: NetServer, payload: any) {
+  const message = {
+    tag: 'classBInstant',
+    payload: payload,
   }
   network.emitOnAllClients(message)
 }

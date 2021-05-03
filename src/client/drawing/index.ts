@@ -8,7 +8,7 @@ import { addLine } from './line'
 import { addText, addTextLive } from './text'
 import { Input } from './input'
 import { Camera } from '../camera'
-import { COLORS, HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
+import { HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
 import { Actions, UIState } from '../actions'
 import { Timer } from '../timer'
 import { Selection } from '../selection'
@@ -121,6 +121,13 @@ export class Graphics {
       if (position === undefined) return
       graphics.velocity = graphics.lastPosition.differenceTo(position)
     })
+  }
+
+  classBInstant(payload: any) {
+    if (payload.kind === undefined) return
+    if (payload.kind.startsWith('ATTACK')) {
+      console.log('Attack Instant')
+    }
   }
 
   private setStageCenter() {

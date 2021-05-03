@@ -30,3 +30,6 @@ network.on('fullState', payload => {
   events.emit('state')
   events.emit('state-fullState')
 })
+network.on('classBInstant', payload => {
+  graphics.classBInstant(payload)
+})

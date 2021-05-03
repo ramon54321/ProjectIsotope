@@ -13,8 +13,10 @@ export type ECS = ECSECS<ComponentTags, Components>
 export class ServerState {
   private readonly networkState: NetworkState
   private readonly ecs: ECS
-  constructor(networkState: NetworkState) {
+  readonly sendClassBInstant: (payload: any) => void
+  constructor(networkState: NetworkState, sendClassBInstant: (payload: any) => void) {
     this.networkState = networkState
+    this.sendClassBInstant = sendClassBInstant
     this.ecs = new ECSECS<ComponentTags, Components>(this.networkState, this, components)
       .addSystem(Movement)
       .addSystem(Reaction)

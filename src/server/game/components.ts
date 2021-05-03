@@ -229,6 +229,7 @@ export class Combat extends TaggedComponent<ComponentTags, Components>('Combat')
       ammunitionStats.velocityMin,
       ammunitionStats.velocityMax,
     )
+    this.serverState.sendClassBInstant({ kind: 'ATTACK_BULLET_LIGHT', origin: new Vec2(0, 0), target: new Vec2(200, 200) })
     engagedEntityHealthComponent.takeDamage(keneticEnergy)
   }
   private canAttack(): boolean {
