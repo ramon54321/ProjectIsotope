@@ -4,6 +4,7 @@ export class ClientState {
   private team: number = 0
   setTeam(value: number) {
     this.team = value
+    this.events.emit('team')
   }
   getTeam(): number {
     return this.team

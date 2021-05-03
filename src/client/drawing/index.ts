@@ -8,7 +8,7 @@ import { addLine } from './line'
 import { addText, addTextLive } from './text'
 import { Input } from './input'
 import { Camera } from '../camera'
-import { HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
+import { COLORS, HALF_HEIGHT, HALF_WIDTH, HEIGHT, WIDTH } from './constants'
 import { Actions, UIState } from '../actions'
 import { Timer } from '../timer'
 import { Selection } from '../selection'
@@ -267,6 +267,19 @@ export class Graphics {
       () => 'World Name: ' + this.networkState.getWorldName(),
       -HALF_WIDTH + PADDING_LEFT,
       -HALF_HEIGHT + PADDING_TOP + 16 * 2,
+      0,
+    )
+    this.ui.textWorldName = addTextLive(
+      this.app,
+      [
+        {
+          emitter: this.clientState.getEventEmitter(),
+          event: 'team',
+        },
+      ],
+      () => 'Team: ' + this.networkState.getTeams()[this.clientState.getTeam()],
+      -HALF_WIDTH + PADDING_LEFT,
+      -HALF_HEIGHT + PADDING_TOP + 16 * 3,
       0,
     )
     this.ui.selectedEntityDetails = addTextLive(

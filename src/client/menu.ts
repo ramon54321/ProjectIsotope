@@ -110,7 +110,8 @@ export class Menu {
         action: (uiState: UIState) => this.actions.addItem(uiState, { kind: 'BODY_HEAD_BOONIE' }),
       },
     ]
-    this.interaction.toggle(uiState, abilitiesActions.concat(devActions))
+    const actions = this.gameOptions.getIsDevMode() ? abilitiesActions.concat(devActions) : abilitiesActions
+    this.interaction.toggle(uiState, actions)
   }
   selectionHoverOther(uiState: UIState) {
     if (uiState.selectedEntity.components.get('Team').team !== this.clientState.getTeam()) return
