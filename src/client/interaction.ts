@@ -23,6 +23,10 @@ export class Interaction {
     this.app.stage.removeChild(this.container)
     this.container = undefined
   }
+  push(uiState: UIState, items: MenuItem[]) {
+    if (this.container) this.close()
+    setTimeout(() => this.spawn(uiState, items), 10)
+  }
   toggle(uiState: UIState, items: MenuItem[]) {
     if (this.container) return this.close()
     this.spawn(uiState, items)

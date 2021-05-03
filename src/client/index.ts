@@ -5,12 +5,14 @@ import { replaceObject } from '../shared/engine/utils'
 import { Graphics } from './drawing'
 import { Actions } from './actions'
 import EventEmitter from 'events'
+import { GameOptions } from './game-options'
 
+const gameOptions = new GameOptions()
 const events = new EventEmitter()
 const network = new NetClient('localhost', 8081)
 const networkState = new NetworkState('READER')
 const actions = new Actions(network)
-const graphics = new Graphics(networkState, actions, events)
+const graphics = new Graphics(networkState, actions, events, gameOptions)
 network.open()
 
 network.on('deltaState', payload => {

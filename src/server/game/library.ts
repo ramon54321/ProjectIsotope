@@ -45,5 +45,19 @@ export const Library = {
           .addComponent(new Factory(['Pawn']))
       },
     },
+    BUILDING_STOCKPILE: {
+      constructor: (ecs: ECS, options: any) => {
+        const position = options.position || new Vec2(0, 0)
+        const team = options.team || 0
+        return ecs
+          .createEntity()
+          .addComponent(new Position(position.x, position.y))
+          .addComponent(new Identity('Stockpile', 'A stockpile for storing items.'))
+          .addComponent(new Team(team))
+          .addComponent(new Dimension(36, 36))
+          .addComponent(new Inventory())
+          .addComponent(new Health())
+      },
+    },
   },
 }

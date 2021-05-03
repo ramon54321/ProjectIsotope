@@ -14,8 +14,10 @@ import { Timer } from '../timer'
 import { Selection } from '../selection'
 import { Interaction } from '../interaction'
 import { getEntityDetails } from './ui'
-import EventEmitter from 'node:events'
+import EventEmitter from 'events'
 import { Menu } from '../menu'
+import { GameOptions } from '../game-options'
+import { ClientState } from '../client-state'
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
@@ -57,20 +59,11 @@ class EntityLibrary {
   }
 }
 
-class ClientState {
-  private isDevMode = false
-  toggleDevMode() {
-    this.isDevMode = !this.isDevMode
-  }
-  getIsDevMode(): boolean {
-    return this.isDevMode
-  }
-}
-
 export class Graphics {
   private readonly networkState: NetworkState
   private readonly actions: Actions
   private readonly events: EventEmitter
+  private readonly gameOptions: GameOptions
   private readonly app: PIXI.Application
   private readonly clientState: ClientState = new ClientState()
   private readonly ui: any = {}
@@ -79,14 +72,15 @@ export class Graphics {
   private readonly entitiesMap = new Map<string, PIXI.Graphics>()
   private readonly selection = new Selection()
   private readonly tickTimer = new Timer()
-  private readonly menu = new Menu()
   private interaction!: Interaction
+  private menu!: Menu
   private camera!: Camera
 
-  constructor(networkState: NetworkState, actions: Actions, events: EventEmitter) {
+  constructor(networkState: NetworkState, actions: Actions, events: EventEmitter, gameOptions: GameOptions) {
     this.networkState = networkState
     this.actions = actions
     this.events = events
+    this.gameOptions = gameOptions
     PIXI.utils.skipHello()
     this.app = new PIXI.Application({
       autoDensity: true,
@@ -103,9 +97,10 @@ export class Graphics {
     this.setStageCenter()
     this.createCamera()
     this.createClientState()
-    this.createInteraction()
-    this.createInput()
     this.createBackground()
+    this.createInteraction()
+    this.createMenu()
+    this.createInput()
     this.createOriginMarkers()
     this.createUI()
     this.createEntities()
@@ -138,21 +133,22 @@ export class Graphics {
   private createClientState() {
     this.app.ticker.add(delta => {
       if (this.input.getInputOnce('p')) {
-        this.clientState.toggleDevMode()
+        this.gameOptions.toggleDevMode()
       }
     })
   }
   private createInteraction() {
     this.interaction = new Interaction(this.app)
+    this.ui.background.on('mouseup', () => this.interaction.close())
     this.app.ticker.add(() => {
       const selectedEntity = this.selection.getSelectedEntity()
       const hoverEntity = this.selection.getHoverEntity()
       const cameraPosition = this.camera.getPosition()
       const mouseScreenPosition = this.input.getMouseScreenPosition(this.app)
       const mouseWorldPosition = this.input.getMouseWorldPosition(this.app, cameraPosition)
-      this.ui.background.on('mouseup', () => this.interaction.close())
-      const shouldOpenMenu = this.input.getInputOnce('e')
-      if (shouldOpenMenu) {
+
+      const shouldOpenContextMenu = this.input.getInputOnce('e')
+      if (shouldOpenContextMenu) {
         const uiState: UIState = {
           mouseScreenPosition: mouseScreenPosition,
           mouseWorldPosition: mouseWorldPosition,
@@ -161,21 +157,35 @@ export class Graphics {
         }
         if (!selectedEntity) {
           if (!hoverEntity) {
-            this.menu.noSelectionNoHover(this.interaction, this.actions, uiState)
+            this.menu.noSelectionNoHover(uiState)
           } else {
-            this.menu.noSelectionHover(this.interaction, this.actions, uiState)
+            this.menu.noSelectionHover(uiState)
           }
         } else {
           if (!hoverEntity) {
-            this.menu.selectionNoHover(this.interaction, this.actions, uiState)
+            this.menu.selectionNoHover(uiState)
           } else if (hoverEntity === selectedEntity) {
-            this.menu.selectionHoverSelf(this.interaction, this.actions, uiState)
+            this.menu.selectionHoverSelf(uiState)
           } else {
-            this.menu.selectionHoverOther(this.interaction, this.actions, uiState)
+            this.menu.selectionHoverOther(uiState)
           }
         }
       }
+
+      const shouldOpenQuitMenu = this.input.getInputOnce('q')
+      if (shouldOpenQuitMenu) {
+        const uiState: UIState = {
+          mouseScreenPosition: mouseScreenPosition,
+          mouseWorldPosition: mouseWorldPosition,
+          selectedEntity: selectedEntity!,
+          hoverEntity: hoverEntity!,
+        }
+        this.menu.quitMenu(uiState)
+      }
     })
+  }
+  private createMenu() {
+    this.menu = new Menu(this.interaction, this.actions, this.gameOptions, this.clientState)
   }
   private createInput() {
     this.app.ticker.add(() => {
@@ -205,14 +215,21 @@ export class Graphics {
     })
   }
   private createUI() {
-    this.ui.helpReload = addText(this.app, 'Press CMD+R to reload...', -HALF_WIDTH + PADDING_LEFT, HALF_HEIGHT - PADDING_TOP - 16 * 1, 0)
-    this.ui.helpReload = addText(
+    this.ui.helpReload = addText(this.app, "Press 'q' for menu", -HALF_WIDTH + PADDING_LEFT, HALF_HEIGHT - PADDING_TOP - 16 * 2, 0)
+    this.ui.helpReload = addTextLive(
       this.app,
-      'Press P to enter Dev Mode...',
+      [
+        {
+          emitter: this.gameOptions.getEventEmitter(),
+          event: 'isDevMode',
+        },
+      ],
+      () => `Press 'p' to ${this.gameOptions.getIsDevMode() ? 'exit' : 'enter'} Dev Mode...`,
       -HALF_WIDTH + PADDING_LEFT,
-      HALF_HEIGHT - PADDING_TOP - 16 * 0,
+      HALF_HEIGHT - PADDING_TOP - 16 * 1,
       0,
     )
+    this.ui.helpReload = addText(this.app, 'Press CMD+R to reload...', -HALF_WIDTH + PADDING_LEFT, HALF_HEIGHT - PADDING_TOP - 16 * 0, 0)
     this.ui.textServerTickRate = addTextLive(
       this.app,
       [
