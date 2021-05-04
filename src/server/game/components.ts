@@ -229,7 +229,15 @@ export class Combat extends TaggedComponent<ComponentTags, Components>('Combat')
       ammunitionStats.velocityMin,
       ammunitionStats.velocityMax,
     )
-    this.serverState.sendClassBInstant({ kind: 'ATTACK_BULLET_LIGHT', origin: new Vec2(0, 0), target: new Vec2(200, 200) })
+    const positionSelf = this.entity.getComponent('Position').getPosition()
+    const positionTarget = this.engagedEntity!.getComponent('Position').getPosition()
+    const velocity = positionSelf.directionTo(positionTarget).scale(2000)
+    this.serverState.sendClassBInstant({
+      kind: 'ATTACK_BULLET_LIGHT',
+      origin: positionSelf,
+      velocity: velocity,
+      team: this.entity.getComponent('Team')?.getTeam(),
+    })
     engagedEntityHealthComponent.takeDamage(keneticEnergy)
   }
   private canAttack(): boolean {

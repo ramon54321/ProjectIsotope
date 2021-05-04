@@ -18,6 +18,8 @@ import EventEmitter from 'events'
 import { Menu } from '../menu'
 import { GameOptions } from '../game-options'
 import { ClientState } from '../client-state'
+import { IdManager } from '../../server/engine/id-manager'
+import { Stats } from '../../shared/game/stats'
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
@@ -104,6 +106,7 @@ export class Graphics {
     this.createOriginMarkers()
     this.createUI()
     this.createEntities()
+    this.createInstantEntities()
     this.app.ticker.add(() => this.input.reset())
   }
 
@@ -123,15 +126,46 @@ export class Graphics {
     })
   }
 
+  private readonly instantEntities = new Map<string, [number, PIXI.Graphics]>()
   classBInstant(payload: any) {
     if (payload.kind === undefined) return
     if (payload.kind.startsWith('ATTACK')) {
-      console.log('Attack Instant')
+      const id = IdManager.generateId()
+      const entity = addCircle(this.app, payload.origin.x, payload.origin.y, 2, this.networkState.getTeams()[payload.team]) as any
+      entity.payload = payload
+      entity.worldPosition = new Vec2(entity.position.x, entity.position.y)
+      const durationSeconds = (Stats.Instants as any)[payload.kind].durationSeconds
+      this.instantEntities.set(id, [durationSeconds, entity])
     }
   }
 
   private setStageCenter() {
     this.app.stage.position.set(HALF_WIDTH, HALF_HEIGHT)
+  }
+  private createInstantEntities() {
+    this.app.ticker.add(delta => {
+      const deltaTimeSeconds = delta / PIXI.settings.TARGET_FPMS! / 1000
+      const toRemoveIds: string[] = []
+      this.instantEntities.forEach((value, key) => {
+        value[0] -= deltaTimeSeconds
+        if (value[0] <= 0) toRemoveIds.push(key)
+      })
+      toRemoveIds.forEach(id => {
+        const graphics = this.instantEntities.get(id)![1]
+        graphics.destroy()
+        this.instantEntities.delete(id)
+      })
+      const cameraWorldPosition = this.camera.getPosition()
+      this.instantEntities.forEach(value => {
+        ;(value[1] as any).worldPosition.x += (value[1] as any).payload.velocity.x * deltaTimeSeconds
+        ;(value[1] as any).worldPosition.y += (value[1] as any).payload.velocity.y * deltaTimeSeconds
+        ;(value[1] as any).position.set(
+          -cameraWorldPosition.x + (value[1] as any).worldPosition.x,
+          -cameraWorldPosition.y + (value[1] as any).worldPosition.y,
+        )
+        value[1].alpha -= deltaTimeSeconds * 0.2
+      })
+    })
   }
   private createCamera() {
     this.camera = new Camera(this.input)
