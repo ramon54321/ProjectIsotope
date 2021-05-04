@@ -1,5 +1,7 @@
 import { NetworkState, NSEntity } from '../../shared/game/network-state'
 import { Stats } from '../../shared/game/stats'
+import { ClientState } from '../client-state'
+import { GameOptions } from '../game-options'
 
 type DisplayListItem = {
   name?: string
@@ -45,4 +47,17 @@ export function getEntityDetails(networkState: NetworkState, entity: NSEntity | 
     .filter(item => item.value !== undefined)
     .map(item => `${item.name ? item.name + ':\n' : ''}${item.value}\n`)
     .join('\n')
+}
+
+export function getGameDetails(
+  networkState: NetworkState,
+  gameOptions: GameOptions,
+  clientState: ClientState,
+  selectedEntity?: NSEntity,
+): string {
+  const tickRate = `Tick Rate: ${networkState.getServerTickRate()}`
+  const selectedEntityId = selectedEntity ? `Selected Entity ID: ${selectedEntity.id}` : undefined
+  const team = `Team: ${networkState.getTeams()[clientState.getTeam()]}`
+  const list = [gameOptions.getIsDevMode() ? tickRate : undefined, gameOptions.getIsDevMode() ? selectedEntityId : undefined, team]
+  return list.filter(item => item !== undefined).join('\n')
 }

@@ -6,7 +6,7 @@ export class GameOptions {
   private isDevMode: boolean = false
   toggleDevMode() {
     this.isDevMode = !this.isDevMode
-    this.events.emit('isDevMode')
+    this.#events.emit('isDevMode')
   }
   getIsDevMode(): boolean {
     return this.isDevMode
@@ -18,12 +18,12 @@ export class GameOptions {
   }
   setShouldShowTutorial(value: boolean) {
     this.shouldShowTutorial = value
-    this.events.emit('shouldShowTutorial')
+    this.#events.emit('shouldShowTutorial')
   }
 
-  private readonly events = new EventEmitter()
+  readonly #events = new EventEmitter()
   getEventEmitter(): EventEmitter {
-    return this.events
+    return this.#events
   }
   readonly #path = 'client-game-options.json'
   constructor() {

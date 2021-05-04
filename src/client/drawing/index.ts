@@ -13,7 +13,7 @@ import { Actions, UIState } from '../actions'
 import { Timer } from '../timer'
 import { Selection } from '../selection'
 import { Interaction } from '../interaction'
-import { getEntityDetails } from './ui'
+import { getEntityDetails, getGameDetails } from './ui'
 import EventEmitter from 'events'
 import { Menu } from '../menu'
 import { GameOptions } from '../game-options'
@@ -256,7 +256,7 @@ export class Graphics {
   private readonly worldSprites = new Map<string, WorldSprite>()
   private createWorld() {
     addRect(this.app, 0, 0, WIDTH, HEIGHT, 'TerrainBase')
-    const tuffCount =  Math.sqrt(WIDTH * HEIGHT) / 10
+    const tuffCount = Math.sqrt(WIDTH * HEIGHT) / 10
     for (let i = 0; i < tuffCount; i++) {
       const id = IdManager.generateId()
       const tuff = new PIXI.Sprite(this.app.loader.resources['res/tuff_1.png'].texture) as WorldSprite
@@ -305,57 +305,40 @@ export class Graphics {
       0,
     )
     this.ui.helpReload = addText(this.app, 'Press CMD+R to reload...', -HALF_WIDTH + PADDING_LEFT, HALF_HEIGHT - PADDING_TOP - 16 * 0, 0)
-    this.ui.textServerTickRate = addTextLive(
-      this.app,
-      [
-        {
-          emitter: this.networkState.getEventEmitter(),
-          event: 'setServerTickRate',
-        },
-      ],
-      () => 'Tick Rate: ' + this.networkState.getServerTickRate().toFixed(0),
-      -HALF_WIDTH + PADDING_LEFT,
-      -HALF_HEIGHT + PADDING_TOP + 16 * 0,
-      0,
-    )
-    this.ui.textEntityId = addTextLive(
+    this.ui.gameDetails = addTextLive(
       this.app,
       [
         {
           emitter: this.selection.getEventEmitter(),
           event: 'entity',
         },
-      ],
-      () => 'Selected EntityID: ' + (this.selection.getSelectedEntity()?.id || 'None'),
-      -HALF_WIDTH + PADDING_LEFT,
-      -HALF_HEIGHT + PADDING_TOP + 16 * 1,
-      0,
-    )
-    this.ui.textWorldName = addTextLive(
-      this.app,
-      [
+        {
+          emitter: this.events,
+          event: 'state',
+        },
+        {
+          emitter: this.networkState.getEventEmitter(),
+          event: 'setServerTickRate',
+        },
         {
           emitter: this.networkState.getEventEmitter(),
           event: 'setWorldName',
         },
-      ],
-      () => 'World Name: ' + this.networkState.getWorldName(),
-      -HALF_WIDTH + PADDING_LEFT,
-      -HALF_HEIGHT + PADDING_TOP + 16 * 2,
-      0,
-    )
-    this.ui.textWorldName = addTextLive(
-      this.app,
-      [
         {
           emitter: this.clientState.getEventEmitter(),
           event: 'team',
         },
+        {
+          emitter: this.gameOptions.getEventEmitter(),
+          event: 'isDevMode',
+        },
       ],
-      () => 'Team: ' + this.networkState.getTeams()[this.clientState.getTeam()],
+      () => getGameDetails(this.networkState, this.gameOptions, this.clientState, this.selection.getSelectedEntity()),
       -HALF_WIDTH + PADDING_LEFT,
-      -HALF_HEIGHT + PADDING_TOP + 16 * 3,
+      -HALF_HEIGHT + PADDING_TOP + 16 * 0,
       0,
+      0,
+      'left',
     )
     this.ui.selectedEntityDetails = addTextLive(
       this.app,
@@ -377,6 +360,7 @@ export class Graphics {
       -HALF_HEIGHT + PADDING_TOP + 16 * 0,
       1,
       0,
+      'right',
     )
   }
   private createEntities() {
