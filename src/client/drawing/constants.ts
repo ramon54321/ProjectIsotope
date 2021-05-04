@@ -8,4 +8,5 @@ export const COLORS = {
   Red: 0xa22a2a,
   Yellow: 0xecaf33,
   Green: 0x11a657,
+  TerrainBase: 0x87cb33,
 }

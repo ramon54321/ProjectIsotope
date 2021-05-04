@@ -20,9 +20,16 @@ import { GameOptions } from '../game-options'
 import { ClientState } from '../client-state'
 import { IdManager } from '../../server/engine/id-manager'
 import { Stats } from '../../shared/game/stats'
+import gen from 'random-seed'
+
+const R = gen.create('12345')
 
 const PADDING_LEFT = 16
 const PADDING_TOP = 16
+
+interface WorldSprite extends PIXI.Sprite {
+  worldPosition: Vec2
+}
 
 class EntityLibrary {
   static getGraphics(app: PIXI.Application, entity: NSEntity, networkState: NetworkState) {
@@ -92,7 +99,7 @@ export class Graphics {
       height: HEIGHT,
     })
     document.body.appendChild(this.app.view)
-    this.app.loader.add(['res/body1.png', 'res/body1_head.png']).load(() => this.start())
+    this.app.loader.add(['res/body1.png', 'res/body1_head.png', 'res/tuff_1.png', 'res/tree_1.png']).load(() => this.start())
   }
 
   start() {
@@ -100,6 +107,7 @@ export class Graphics {
     this.createCamera()
     this.createClientState()
     this.createBackground()
+    this.createWorld()
     this.createInteraction()
     this.createMenu()
     this.createInput()
@@ -243,6 +251,32 @@ export class Graphics {
     this.ui.background.interactive = true
     this.ui.background.on('mouseup', () => this.selection.clearSelectedEntity())
     this.ui.background.on('mouseover', () => this.selection.clearHoverEntity())
+  }
+
+  private readonly worldSprites = new Map<string, WorldSprite>()
+  private createWorld() {
+    addRect(this.app, 0, 0, WIDTH, HEIGHT, 'TerrainBase')
+    const tuffCount =  Math.sqrt(WIDTH * HEIGHT) / 10
+    for (let i = 0; i < tuffCount; i++) {
+      const id = IdManager.generateId()
+      const tuff = new PIXI.Sprite(this.app.loader.resources['res/tuff_1.png'].texture) as WorldSprite
+      tuff.scale.set(0.5, 0.5)
+      tuff.anchor.set(0.5, 0.5)
+      tuff.rotation = Math.PI * R.random() * 2
+      tuff.worldPosition = new Vec2(R.range(WIDTH), R.range(HEIGHT))
+      this.app.stage.addChild(tuff)
+      this.worldSprites.set(id, tuff)
+    }
+    this.app.ticker.add(delta => {
+      const cameraWorldPosition = this.camera.getPosition()
+      this.worldSprites.forEach(sprite => {
+        const x = -cameraWorldPosition.x + sprite.worldPosition.x
+        const y = -cameraWorldPosition.y + sprite.worldPosition.y
+        const xL = x % WIDTH < 0 ? (x % WIDTH) + HALF_WIDTH : (x % WIDTH) - HALF_WIDTH
+        const yL = y % HEIGHT < 0 ? (y % HEIGHT) + HALF_HEIGHT : (y % HEIGHT) - HALF_HEIGHT
+        sprite.position.set(xL, yL)
+      })
+    })
   }
   private createOriginMarkers() {
     this.ui.origin = addCircle(this.app, 0, 0, 3)
