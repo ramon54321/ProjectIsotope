@@ -4,7 +4,10 @@ import { EntityTag, Stats } from '../../shared/game/stats'
 import { TaggedComponent } from '../engine/ecs'
 import { getKeneticEnergy } from './ballistics'
 import { Entity } from './server-state'
-import { getItemStats } from './utils'
+import { degToVec, getItemStats, vecToDeg } from './utils'
+import gen from 'random-seed'
+
+const R = gen.create('12345')
 
 export const components = [
   'Position',
@@ -231,7 +234,7 @@ export class Combat extends TaggedComponent<ComponentTags, Components>('Combat')
     )
     const positionSelf = this.entity.getComponent('Position').getPosition()
     const positionTarget = this.engagedEntity!.getComponent('Position').getPosition()
-    const velocity = positionSelf.directionTo(positionTarget).scale(2000)
+    const velocity = degToVec(vecToDeg(positionSelf.directionTo(positionTarget)) + R.range(6) - 3).scale(2000)
     this.serverState.sendClassBInstant({
       kind: 'ATTACK_BULLET_LIGHT',
       origin: positionSelf,
