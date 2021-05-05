@@ -282,6 +282,15 @@ export class Graphics {
     this.ui.origin = addCircle(this.app, 0, 0, 3)
     this.ui.originVertical = addLine(this.app, 0, -HALF_HEIGHT, 0, HEIGHT, 1, 0xeeeeee, 0.5)
     this.ui.originHorizontal = addLine(this.app, -HALF_WIDTH, 0, WIDTH, 0, 1, 0xeeeeee, 0.5)
+    const setAlpha = () => {
+      const isDevMode = this.gameOptions.getIsDevMode()
+      const alpha = isDevMode ? 1 : 0
+      this.ui.origin.alpha = alpha
+      this.ui.originVertical.alpha = alpha
+      this.ui.originHorizontal.alpha = alpha
+    }
+    setAlpha()
+    this.gameOptions.getEventEmitter().on('isDevMode', setAlpha)
     this.app.ticker.add(delta => {
       const cameraPosition = this.camera.getPosition()
       this.ui.origin.position.set(-cameraPosition.x, -cameraPosition.y)
