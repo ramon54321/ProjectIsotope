@@ -33,7 +33,7 @@ interface WorldSprite extends PIXI.Sprite {
 
 class EntityLibrary {
   static getGraphics(app: PIXI.Application, entity: NSEntity, networkState: NetworkState) {
-    const simpleKinds = ['Dummy', 'Pawn']
+    const simpleKinds = ['Dummy']
     const team = entity.components.get('Team')?.team
     const colorName = networkState.getTeams()[team]
     if (simpleKinds.includes(entity.kind)) {
@@ -55,13 +55,13 @@ class EntityLibrary {
       }
       return main
     } else {
-      const body = new PIXI.Sprite(app.loader.resources['res/body1.png'].texture)
-      body.anchor.set(0.5, 0.5)
-      body.scale.set(0.5, 0.5)
-      const head = new PIXI.Sprite(app.loader.resources['res/body1_head.png'].texture)
-      head.anchor.set(0.55, 0.85)
-      head.scale.set(1.25, 1.25)
+      const body = new PIXI.Sprite(app.loader.resources['res/biped1.json'].textures!['template_biped_body.png'])
+      const head = new PIXI.Sprite(app.loader.resources['res/biped1.json'].textures!['template_biped_head.png'])
       body.addChild(head)
+      body.anchor.set(0.5, 0.5)
+      head.anchor.set(0.5, 0.5)
+      head.position.set(-32, -64)
+      body.scale.set(0.5, 0.5)
       app.stage.addChild(body)
       return body
     }
@@ -99,7 +99,7 @@ export class Graphics {
       height: HEIGHT,
     })
     document.body.appendChild(this.app.view)
-    this.app.loader.add(['res/body1.png', 'res/body1_head.png', 'res/tuff_1.png', 'res/tree_1.png']).load(() => this.start())
+    this.app.loader.add(['res/body1.png', 'res/body1_head.png', 'res/tuff_1.png', 'res/tree_1.png', 'res/biped1.json']).load(() => this.start())
   }
 
   start() {
