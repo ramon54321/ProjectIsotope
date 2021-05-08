@@ -1,53 +1,39 @@
-import EventEmitter from 'events'
 import * as PIXI from 'pixi.js'
+import { Vec2 } from '../../shared/engine/math'
+import { COLORS, ColorsTag } from './constants'
 
-const FONT_SIZE = 10
-const TEXT_STYLE_RIGHT = new PIXI.TextStyle({
-  fontSize: FONT_SIZE,
-  fill: 0xeeeeee,
-  align: 'right',
-})
-const TEXT_STYLE_LEFT = new PIXI.TextStyle({
-  fontSize: FONT_SIZE,
-  fill: 0xeeeeee,
-  align: 'left',
-})
-
-export function addText(
-  app: PIXI.Application,
+export function createText(
   text: string,
   x: number,
   y: number,
-  anchorX: number = 0.5,
-  anchorY: number = 0.5,
-  align: 'left' | 'right' = 'left',
+  options?: {
+    anchor?: Vec2
+    colorName?: ColorsTag
+    color?: number
+    align?: 'left' | 'center' | 'right' | 'justify'
+    fontSize?: number
+  },
 ) {
-  const message = new PIXI.Text(text, align === 'left' ? TEXT_STYLE_LEFT : TEXT_STYLE_RIGHT)
-  message.anchor.set(anchorX, anchorY)
+  const _options = Object.assign(
+    {},
+    {
+      anchor: new Vec2(0.5, 0.5),
+      colorName: undefined,
+      color: 0xeeeeee,
+      align: 'center',
+      fontSize: 10,
+    },
+    options,
+  )
+  const _color = (COLORS as any)[_options.colorName!]
+  const textStyle = new PIXI.TextStyle({
+    fontSize: _options.fontSize,
+    fill: _color ? _color : _options.color,
+    align: _options.align,
+  })
+  const message = new PIXI.Text(text, textStyle)
+  message.anchor.set(_options.anchor.x, _options.anchor.y)
   message.x = x
   message.y = y
-  message.interactive = true
-  // message.on('mousedown', )
-  app.stage.addChild(message)
-  return message
-}
-
-type Event = {
-  emitter: EventEmitter
-  event: string
-}
-
-export function addTextLive(
-  app: PIXI.Application,
-  updateEvents: Event[],
-  update: () => string,
-  x: number,
-  y: number,
-  anchorX: number = 0.5,
-  anchorY: number = 0.5,
-  align: 'left' | 'right' = 'left',
-) {
-  const message = addText(app, update(), x, y, anchorX, anchorY, align)
-  updateEvents.forEach(updateEvent => updateEvent.emitter.on(updateEvent.event, () => (message.text = update())))
   return message
 }

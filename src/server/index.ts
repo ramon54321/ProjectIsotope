@@ -3,6 +3,10 @@ import { NetworkState } from '../shared/game/network-state'
 import { serialize } from '../shared/engine/serialization'
 import { ServerState } from './game/server-state'
 import { GameLogic } from './game/game-logic'
+import { Vec2 } from '../shared/engine/math'
+import gen from 'random-seed'
+
+const R = gen.create('12345')
 
 const TICK_RATE = 5
 const TICKS_PER_SLOW_TICK = 5
@@ -21,6 +25,14 @@ network.on('action', payload => {
 
 networkState.setServerTickRate(TICK_RATE)
 networkState.setTeams(['Blue', 'Red', 'Yellow'])
+
+spawnWorld()
+function spawnWorld() {
+  for (let i = 0; i < 50; i++) {
+    const position = new Vec2(R.random() * 10000 - 5000, R.random() * 10000 - 5000)
+    serverState.createEntity('Pawn', { position: position })
+  }
+}
 
 setInterval(tick, 1000 / networkState.getServerTickRate())
 

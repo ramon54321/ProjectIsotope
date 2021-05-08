@@ -1,7 +1,3 @@
-import * as PIXI from 'pixi.js'
-import { Vec2 } from '../../shared/engine/math'
-import { HALF_HEIGHT, HALF_WIDTH } from './constants'
-
 export class Input {
   private readonly inputDown: any = {}
   private readonly inputOnce: any = {}
@@ -33,15 +29,5 @@ export class Input {
   }
   getInputOnce(key: string) {
     return this.inputOnce[key]
-  }
-  getMouseScreenPosition(app: PIXI.Application): Vec2 {
-    const rawPosition = app.renderer.plugins.interaction.mouse.global
-    return new Vec2(rawPosition.x - HALF_WIDTH, rawPosition.y - HALF_HEIGHT)
-  }
-  getMouseWorldPosition(app: PIXI.Application, cameraPosition: Vec2): Vec2 {
-    const rawPosition = app.renderer.plugins.interaction.mouse.global
-    const x = rawPosition.x + cameraPosition.x - HALF_WIDTH
-    const y = rawPosition.y + cameraPosition.y - HALF_HEIGHT
-    return new Vec2(x, y)
   }
 }

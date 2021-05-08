@@ -29,7 +29,7 @@ export class State {
     const method = (this as any)[methodName]
     const args = syncStateAction.slice(1)
     method.bind(this)(...args)
-    this.#events.emit(methodName)
+    this.#events.emit(methodName, ...args)
     this.clearActions()
   }
   clearActions() {
@@ -41,7 +41,7 @@ export class State {
   update() {
     State.eventTriggers.forEach(event => this.#events.emit(event))
   }
-  on(methodName: string, callback: () => void) {
+  on(methodName: string, callback: any) {
     this.#events.on(methodName, callback)
   }
   once(methodName: string, callback: () => void) {

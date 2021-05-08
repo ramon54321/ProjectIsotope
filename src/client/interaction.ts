@@ -1,6 +1,7 @@
 import EventEmitter from 'events'
 import * as PIXI from 'pixi.js'
 import { UIState } from './actions'
+import { Gtx } from './graphics'
 import { addMenu } from './drawing/menu'
 
 export type MenuItem = {
@@ -9,18 +10,19 @@ export type MenuItem = {
 }
 
 export class Interaction {
-  private readonly app: PIXI.Application
+  private readonly gtx: Gtx
   private container: PIXI.Container | undefined
   private readonly events = new EventEmitter()
-  constructor(app: PIXI.Application) {
-    this.app = app
+  constructor(gtx: Gtx) {
+    this.gtx = gtx
+    gtx.renderLayers.getRenderLayer('Background').on('mouseup', () => this.close())
   }
   getEventEmitter(): EventEmitter {
     return this.events
   }
   close() {
     if (!this.container) return
-    this.app.stage.removeChild(this.container)
+    this.gtx.app.stage.removeChild(this.container)
     this.container = undefined
   }
   push(uiState: UIState, items: MenuItem[]) {
@@ -33,7 +35,8 @@ export class Interaction {
   }
   private spawn(uiState: UIState, items: MenuItem[]) {
     this.container = addMenu(
-      this.app,
+      // TODO: Move menu to renderlayer
+      this.gtx.app,
       items,
       uiState.mouseScreenPosition.x,
       uiState.mouseScreenPosition.y,

@@ -1,16 +1,36 @@
 import * as PIXI from 'pixi.js'
-import { COLORS } from './constants'
+import { COLORS, ColorsTag } from './constants'
 
-const DEFAULT_FILL_COLOR = 0x111111
-
-export function addRect(app: PIXI.Application, x: number, y: number, dx: number, dy: number, colorName?: string) {
+export function createRect(
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+  options?: {
+    colorName?: ColorsTag
+    color?: number
+    anchor?: 'center' | 'top-left'
+  },
+) {
+  const _options = Object.assign(
+    {},
+    {
+      colorName: undefined,
+      color: 0x888888,
+      anchor: 'center',
+    },
+    options,
+  )
   const rect = new PIXI.Graphics()
-  const color = (COLORS as any)[colorName!]
-  rect.beginFill(color !== undefined ? color : DEFAULT_FILL_COLOR)
-  rect.drawRect(-dx / 2, -dy / 2, dx, dy)
+  const color = (COLORS as any)[_options.colorName!]
+  rect.beginFill(color ? color : _options.color)
+  if (_options.anchor === 'center') {
+    rect.drawRect(-dx / 2, -dy / 2, dx, dy)
+  } else if (_options.anchor === 'top-left') {
+    rect.drawRect(0, 0, dx, dy)
+  }
   rect.endFill()
   rect.x = x
   rect.y = y
-  app.stage.addChild(rect)
   return rect
 }
