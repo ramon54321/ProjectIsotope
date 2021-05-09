@@ -10,20 +10,27 @@ const R = gen.create('12345')
 
 export class SpriteLibrary {
   static getFixtureSprite(gtx: Gtx, fixture: NSFixture): PIXI.Sprite {
-    const sprite = new PIXI.Sprite(gtx.app.loader.resources[`res/blob.png`].texture)
-    sprite.anchor.set(0.5, 0.5)
-    sprite.scale.set(0.5 * fixture.scale, 0.5 * fixture.scale)
-    sprite.tint = R.random() > 0.5 ? 0xf0d269 : 0xc9b779
-    sprite.position.set(fixture.position.x, fixture.position.y)
-    return sprite
+    if (fixture.kind === 'PATCH_L_0') {
+      const sprite = SpriteUtils.createSprite(gtx.app, 'PATCH_L_A', undefined, { scale: new Vec2(0.5 * fixture.scale, 0.5 * fixture.scale) })
+      sprite.tint = R.random() > 0.5 ? 0xf0d269 : 0xc9b779
+      sprite.position.set(fixture.position.x, fixture.position.y)
+      sprite.rotation = fixture.rotation
+      return sprite
+    } else {
+      const sprite = SpriteUtils.createSprite(gtx.app, 'GRASS_S_A', undefined, { scale: new Vec2(0.5 * fixture.scale, 0.5 * fixture.scale) })
+      sprite.tint = R.random() > 0.5 ? 0xEEB977 : 0xFFDFB2
+      sprite.position.set(fixture.position.x, fixture.position.y)
+      sprite.rotation = fixture.rotation
+      return sprite
+    }
   }
   static getPawnSprite(gtx: Gtx, entity: NSEntity): PawnSprite {
     const simpleKinds = ['Dummy']
     const team = entity.components.get('Team')?.team
     const colorName = gtx.networkState.getTeams()[team]
 
-    const body = SpriteUtils.createSprite(gtx.app, 'biped1', 'template_biped_body', { scale: new Vec2(0.5, 0.5) }) as PawnSprite
-    const head = SpriteUtils.createSprite(gtx.app, 'biped1', 'template_biped_head')
+    const body = SpriteUtils.createSprite(gtx.app, 'BIPED_A', 'BIPED_A_BODY', { scale: new Vec2(0.5, 0.5) }) as PawnSprite
+    const head = SpriteUtils.createSprite(gtx.app, 'BIPED_A', 'BIPED_A_HEAD')
     body.addChild(head)
     head.position.set(-16, -32)
     gtx.app.stage.addChild(body)

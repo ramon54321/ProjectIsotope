@@ -7,9 +7,25 @@ export class GameOptions {
   toggleDevMode() {
     this.isDevMode = !this.isDevMode
     this.#events.emit('isDevMode')
+    if (!this.isDevMode) {
+      this.toggleZoomedOut()
+    }
   }
   getIsDevMode(): boolean {
     return this.isDevMode
+  }
+
+  private isZoomedOut: boolean = false
+  toggleZoomedOut() {
+    if (!this.isDevMode) {
+      this.isZoomedOut = false
+    } else {
+      this.isZoomedOut = !this.isZoomedOut
+    }
+    this.#events.emit('isZoomedOut')
+  }
+  getIsZoomedOut(): boolean {
+    return this.isZoomedOut
   }
 
   private shouldShowTutorial: boolean = true

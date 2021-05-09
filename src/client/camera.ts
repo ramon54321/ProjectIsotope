@@ -32,9 +32,24 @@ export class Camera {
     this.gtx.gameOptions.getEventEmitter().on('isDevMode', setAlpha)
     setAlpha()
 
+    // DevMode Zoom
+    this.gtx.gameOptions.getEventEmitter().on('isZoomedOut', () => this.setZoomMode())
+
     // World Container
     this.containers = [this.gtx.renderLayers.getRenderLayer('Entities'), this.gtx.renderLayers.getRenderLayer('Fixtures')]
     this.gtx.app.ticker.add(delta => this.tick(delta))
+  }
+  setZoomMode() {
+    if (this.gtx.gameOptions.getIsZoomedOut()) {
+      this.gtx.app.stage.position.set(
+        this.gtx.app.renderer.width / (2 * this.gtx.app.renderer.resolution),
+        this.gtx.app.renderer.height / (2 * this.gtx.app.renderer.resolution),
+      )
+      this.gtx.app.stage.scale.set(0.1, 0.1)
+    } else {
+      this.gtx.app.stage.position.set(0, 0)
+      this.gtx.app.stage.scale.set(1, 1)
+    }
   }
   getWidth(): number {
     return this.width

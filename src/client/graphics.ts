@@ -30,9 +30,9 @@ export interface Gtx {
 
 export class Graphics {
   private readonly tickTimer = new Timer()
-  
+
   private readonly stats: Stats
-  
+
   private readonly renderLayers: RenderLayers
   private readonly clientState: ClientState
   private readonly selection: Selection
@@ -68,7 +68,9 @@ export class Graphics {
       height: window.innerHeight,
     })
     document.body.appendChild(this.app.view)
-    this.app.loader.add(['res/biped1.json', 'res/biped2.json', 'res/blob.png']).load(() => this.start())
+    this.app.loader
+      .add(['res/BIPED_A/BIPED_A.json', 'res/PATCH_L_A/PATCH_L_A.json', 'res/GRASS_S_A/GRASS_S_A.json'])
+      .load(() => this.start())
 
     // Render Layers
     this.renderLayers = new RenderLayers()
@@ -152,6 +154,9 @@ export class Graphics {
   private tickInput(delta: number) {
     if (this.input.getInputOnce('p')) {
       this.gameOptions.toggleDevMode()
+    }
+    if (this.input.getInputOnce('o')) {
+      this.gameOptions.toggleZoomedOut()
     }
   }
 

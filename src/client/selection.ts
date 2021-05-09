@@ -13,7 +13,10 @@ export class Selection {
   constructor(app: PIXI.Application, renderLayers: RenderLayers) {
     this.app = app
     this.renderLayers = renderLayers
-    const background = createRect(0, 0, this.app.renderer.width, this.app.renderer.height, { colorName: 'BackgroundHitbox' })
+    const width =  this.app.renderer.width / this.app.renderer.resolution
+    const height =  this.app.renderer.height / this.app.renderer.resolution
+    const background = createRect(0, 0, width, height, { colorName: 'BackgroundHitbox' })
+    background.position.set(width / 2, height / 2)
     const renderLayer = this.renderLayers.getRenderLayer('Background')
     renderLayer.addChild(background)
     renderLayer.interactive = true

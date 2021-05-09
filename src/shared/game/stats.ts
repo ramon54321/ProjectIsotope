@@ -37,6 +37,9 @@ export const Stats = {
   Fixtures: {
     PATCH_L_0: {
       
+    },
+    GRASS_S_0: {
+      
     }
   }
 }

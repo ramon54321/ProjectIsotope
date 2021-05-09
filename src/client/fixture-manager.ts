@@ -6,7 +6,7 @@ import { SpriteManager } from './sprite-manager'
 
 export class FixtureManager extends SpriteManager<any> {
   constructor(gtx: Gtx, camera: Camera) {
-    super(gtx, camera, 'Fixtures', 1, 1, 500, 500)
+    super(gtx, camera, 'Fixtures', 2, 2, 400, 400)
   }
   start() {
     this.gtx.events.on('state-fullState', () => this.reload())
