@@ -1,11 +1,11 @@
 import * as PIXI from 'pixi.js'
 import { Vec2 } from '../shared/engine/math'
 import { Camera } from './camera'
-import { ActiveTotal, Gtx } from './graphics'
+import { Gtx } from './graphics'
 import { QuadTree, AABB } from './quadtree'
 import { SpriteLibrary } from './sprite-library'
 
-export class FixtureManager implements ActiveTotal {
+export class FixtureManager {
   private readonly gtx: Gtx
   private readonly camera: Camera
   constructor(gtx: Gtx, camera: Camera) {
@@ -13,20 +13,36 @@ export class FixtureManager implements ActiveTotal {
     this.camera = camera
     setInterval(() => this.slowTick(), 200)
   }
-  getActiveCount(): number {
-    return this.lastSet.length
+  getActiveSmall(): number {
+    return this.lastActiveSmall
   }
-  getTotalCount(): number {
-    return this.quadTree.count()
+  getTotalSmall(): number {
+    return this.lastTotalSmall
+  }
+  getActiveLarge(): number {
+    return this.lastActiveLarge
+  }
+  getTotalLarge(): number {
+    return this.lastTotalLarge
   }
   private lastSet: [string, PIXI.Sprite][] = []
-  private readonly quadTree = new QuadTree<PIXI.Sprite>(new AABB(0, 0, 5000))
+  private lastTotalSmall: number = 0
+  private lastTotalLarge: number = 0
+  private lastActiveSmall: number = 0
+  private lastActiveLarge: number = 0
+  private readonly quadTreeSmall = new QuadTree<PIXI.Sprite>(new AABB(0, 0, 5000))
+  private readonly quadTreeLarge = new QuadTree<PIXI.Sprite>(new AABB(0, 0, 5000))
   private slowTick() {
     const cameraPosition = this.camera.getPosition()
-    const cameraArea = new AABB(cameraPosition.x, cameraPosition.y, this.gtx.app.renderer.width)
+    const cameraAreaSmall = new AABB(cameraPosition.x, cameraPosition.y, this.gtx.app.renderer.width / 3.2)
+    const cameraAreaLarge = new AABB(cameraPosition.x, cameraPosition.y, this.gtx.app.renderer.width)
     this.lastSet.forEach(([id, sprite]) => (sprite.visible = false))
-    const sprites = this.quadTree.query(cameraArea)
+    const spritesSmall = this.quadTreeSmall.query(cameraAreaSmall)
+    const spritesLarge = this.quadTreeLarge.query(cameraAreaLarge)
+    const sprites = spritesSmall.concat(spritesLarge)
     sprites.forEach(([id, sprite]) => (sprite.visible = true))
+    this.lastActiveSmall = spritesSmall.length
+    this.lastActiveLarge = spritesLarge.length
     this.lastSet = sprites
   }
   start() {
@@ -39,7 +55,10 @@ export class FixtureManager implements ActiveTotal {
     this.reload()
   }
   private reload() {
-    this.quadTree.query(this.quadTree.boundary).forEach(([id, sprite]) => this.destroyFixture(id, sprite))
+    this.quadTreeSmall
+      .query(this.quadTreeSmall.boundary)
+      .concat(this.quadTreeLarge.query(this.quadTreeLarge.boundary))
+      .forEach(([id, sprite]) => this.destroyFixture(id, sprite))
     this.gtx.networkState.getFixtures().forEach(fixture => this.createFixture(fixture.id))
   }
   private createFixture(id: string) {
@@ -47,14 +66,26 @@ export class FixtureManager implements ActiveTotal {
     if (fixture === undefined) return
     const sprite = SpriteLibrary.getFixtureSprite(this.gtx, fixture)
     this.gtx.renderLayers.addSprite(sprite, 'Fixtures')
-    this.quadTree.add(fixture.position, id, sprite)
+    if (fixture.scale >= 16) {
+      this.quadTreeLarge.add(fixture.position, id, sprite)
+      this.lastTotalLarge++
+    } else {
+      this.quadTreeSmall.add(fixture.position, id, sprite)
+      this.lastTotalSmall++
+    }
     sprite.visible = false
   }
   private destroyFixture(id: string, sprite?: PIXI.Sprite) {
-    const _sprite = sprite ? sprite : this.quadTree.get(id)
+    const _sprite = sprite ? sprite : this.quadTreeSmall.get(id) || this.quadTreeLarge.get(id)
     if (_sprite === undefined) return
     this.gtx.renderLayers.removeSprite(_sprite, 'Fixtures')
-    this.quadTree.remove(id)
+    if (this.quadTreeSmall.remove(id)) {
+      this.lastTotalSmall--
+    } else if (this.quadTreeLarge.remove(id)) {
+      this.lastTotalLarge--
+    } else {
+      throw new Error('Tried to remove unknown fixture')
+    }
     _sprite.destroy()
   }
   protected render(deltaTimeSeconds: number) {}

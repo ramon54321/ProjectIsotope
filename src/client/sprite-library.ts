@@ -15,12 +15,14 @@ export class SpriteLibrary {
       sprite.tint = R.random() > 0.5 ? 0xf0d269 : 0xc9b779
       sprite.position.set(fixture.position.x, fixture.position.y)
       sprite.rotation = fixture.rotation
+      sprite.interactive = false
       return sprite
     } else {
       const sprite = SpriteUtils.createSprite(gtx.app, 'GRASS_S_A', undefined, { scale: new Vec2(0.5 * fixture.scale, 0.5 * fixture.scale) })
       sprite.tint = R.random() > 0.5 ? 0xEEB977 : 0xFFDFB2
       sprite.position.set(fixture.position.x, fixture.position.y)
       sprite.rotation = fixture.rotation
+      sprite.interactive = false
       return sprite
     }
   }

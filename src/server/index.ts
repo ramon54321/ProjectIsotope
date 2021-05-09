@@ -8,6 +8,12 @@ import gen from 'random-seed'
 
 const R = gen.create('12345')
 
+setInterval(() => {
+  const used = process.memoryUsage().heapUsed / 1024 / 1024
+  const total = process.memoryUsage().heapTotal / 1024 / 1024
+  console.log(`Heap: ${used.toFixed(1)}/${total.toFixed(1)} MB`)
+}, 5000)
+
 const TICK_RATE = 5
 const TICKS_PER_SLOW_TICK = 5
 
@@ -32,9 +38,9 @@ function spawnWorld() {
     const position = new Vec2(R.random() * 10000 - 5000, R.random() * 10000 - 5000)
     serverState.createFixture('PATCH_L_0', position, R.random() * 2 * Math.PI, (0.75 + R.random() / 2) * 32)
   }
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 100000; i++) {
     const position = new Vec2(R.random() * 10000 - 5000, R.random() * 10000 - 5000)
-    serverState.createFixture('GRASS_S_0', position, 0, (0.75 + R.random() / 2))
+    serverState.createFixture('GRASS_S_0', position, 0, 0.75 + R.random() / 2)
   }
 }
 
@@ -50,21 +56,36 @@ function tick() {
   sendDeltaState(network, networkState)
 }
 
-function sendFullState(network: NetServer, connection: Connection, state: any) {
+function sendFullState(network: NetServer, connection: Connection, state: NetworkState) {
+  const _state = Object.assign({}, state, { fixtures: undefined })
   const message = {
     tag: 'fullState',
     payload: {
-      state: serialize(state),
+      state: serialize(_state),
     },
   }
   network.emitOnClient(connection, message)
+  const fixtures = state.getFixtures()
+  const chunkSize = 1000
+  for (let i = 0; i < fixtures.length; i += chunkSize) {
+    const chunk = fixtures.slice(i, i + chunkSize)
+    const actions = chunk.map(fixture => ['createFixture', fixture.id, fixture.kind, fixture.position, fixture.rotation, fixture.scale])
+    const messageDeltaChunk = {
+      tag: 'deltaState',
+      payload: {
+        actions: actions,
+      },
+    }
+    network.emitOnClient(connection, messageDeltaChunk)
+  }
 }
 
-function sendDeltaState(network: NetServer, state: any) {
+function sendDeltaState(network: NetServer, state: NetworkState) {
+  const actions = state.popActions()
   const message = {
     tag: 'deltaState',
     payload: {
-      actions: state.popActions(),
+      actions: actions,
     },
   }
   network.emitOnAllClients(message)

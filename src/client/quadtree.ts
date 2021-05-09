@@ -35,7 +35,7 @@ export class AABB {
 export class QuadTree<T> {
   readonly boundary: AABB
   private readonly capacity: number
-  constructor(boundary: AABB, capacity: number = 4) {
+  constructor(boundary: AABB, capacity: number = 16) {
     this.boundary = boundary
     this.capacity = capacity
   }

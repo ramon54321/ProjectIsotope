@@ -1,7 +1,7 @@
 {
   "main": "launcher.js",
   "scripts": {
-    "package": "package.bash",
+    "package": "./package.bash",
     "run:production": "open out/isotope-darwin-x64/isotope.app"
   },
   "devDependencies": {

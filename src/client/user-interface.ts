@@ -4,6 +4,7 @@ import { Vec2 } from '../shared/engine/math'
 import { NSEntity } from '../shared/game/network-state'
 import { Stats } from '../shared/game/stats'
 import { createText } from './drawing/text'
+import { FixtureManager } from './fixture-manager'
 
 type DisplayListItem = {
   name?: string
@@ -13,11 +14,11 @@ type DisplayListItem = {
 export class UserInterface {
   private readonly gtx: Gtx
   private readonly entityManager: ActiveTotal
-  private readonly fixtureManager: ActiveTotal
+  private readonly fixtureManager: FixtureManager
   private readonly width: number
   private readonly height: number
   private readonly container: PIXI.Container
-  constructor(gtx: Gtx, entityManager: ActiveTotal, fixtureManager: ActiveTotal) {
+  constructor(gtx: Gtx, entityManager: ActiveTotal, fixtureManager: FixtureManager) {
     this.gtx = gtx
     this.entityManager = entityManager
     this.fixtureManager = fixtureManager
@@ -129,7 +130,8 @@ export class UserInterface {
   }
   private getClientDetails(): string {
     const entities = `Entities: ${this.entityManager.getActiveCount()}/${this.entityManager.getTotalCount()}`
-    const fixtures = `Fixtures: ${this.fixtureManager.getActiveCount()}/${this.fixtureManager.getTotalCount()}`
+    const fixturesSmall = `Fixture Small: ${this.fixtureManager.getActiveSmall()}/${this.fixtureManager.getTotalSmall()}`
+    const fixturesLarge = `Fixture Large: ${this.fixtureManager.getActiveLarge()}/${this.fixtureManager.getTotalLarge()}`
     const selectedEntity = this.gtx.selection.getSelectedEntity()
     const tickRate = `Tick Rate: ${this.gtx.networkState.getServerTickRate()}`
     const selectedEntityId = selectedEntity ? `Selected Entity ID: ${selectedEntity.id}` : undefined
@@ -137,7 +139,8 @@ export class UserInterface {
     const isDevMode = this.gtx.gameOptions.getIsDevMode()
     const list = [
       isDevMode ? entities : undefined,
-      isDevMode ? fixtures : undefined,
+      isDevMode ? fixturesSmall : undefined,
+      isDevMode ? fixturesLarge : undefined,
       isDevMode ? tickRate : undefined,
       isDevMode ? selectedEntityId : undefined,
       team,
