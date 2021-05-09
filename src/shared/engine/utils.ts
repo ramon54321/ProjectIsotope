@@ -11,3 +11,9 @@ export function replaceObject(target: object, value: object) {
     }
   }
 }
+
+export function doTimes(iterations: number, callback: (iteration: number) => void) {
+  for (let i = 0; i < iterations; i++) {
+    callback(i)
+  }
+}

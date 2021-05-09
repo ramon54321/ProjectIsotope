@@ -1,11 +1,22 @@
 import * as PIXI from 'pixi.js'
 import { Vec2 } from '../shared/engine/math'
-import { NSEntity } from '../shared/game/network-state'
+import { NSEntity, NSFixture } from '../shared/game/network-state'
 import { createText } from './drawing/text'
 import { Gtx } from './graphics'
 import { PawnSprite, SpriteUtils } from './sprite-utils'
+import gen from 'random-seed'
+
+const R = gen.create('12345')
 
 export class SpriteLibrary {
+  static getFixtureSprite(gtx: Gtx, fixture: NSFixture): PIXI.Sprite {
+    const sprite = new PIXI.Sprite(gtx.app.loader.resources[`res/blob.png`].texture)
+    sprite.anchor.set(0.5, 0.5)
+    sprite.scale.set(0.5 * fixture.scale, 0.5 * fixture.scale)
+    sprite.tint = R.random() > 0.5 ? 0xf0d269 : 0xc9b779
+    sprite.position.set(fixture.position.x, fixture.position.y)
+    return sprite
+  }
   static getPawnSprite(gtx: Gtx, entity: NSEntity): PawnSprite {
     const simpleKinds = ['Dummy']
     const team = entity.components.get('Team')?.team

@@ -12,6 +12,7 @@ export class NetworkState extends State {
   getWorldName(): string {
     return this.worldName
   }
+
   private serverTickRate: number = 1
   @Pushable()
   setServerTickRate(value: number) {
@@ -20,6 +21,7 @@ export class NetworkState extends State {
   getServerTickRate(): number {
     return this.serverTickRate
   }
+
   private teams: string[] = []
   @Pushable()
   setTeams(value: string[]) {
@@ -28,6 +30,8 @@ export class NetworkState extends State {
   getTeams(): string[] {
     return this.teams
   }
+
+  // Entities
   private entities = new Map<string, NSEntity>()
   @Pushable()
   createEntity(id: string, kind: string) {
@@ -58,6 +62,32 @@ export class NetworkState extends State {
   getEntityComponent(id: string, componentKey: string): any {
     return this.entities.get(id)?.components.get(componentKey)
   }
+
+  // Fixtures
+  private fixtures = new Map<string, NSFixture>()
+  @Pushable()
+  createFixture(id: string, kind: string, position: Vec2, rotation: number, scale: number) {
+    const fixture: NSFixture = {
+      id: id,
+      kind: kind,
+      position: new Vec2(position.x, position.y),
+      rotation: rotation,
+      scale: scale,
+    }
+    this.fixtures.set(fixture.id, fixture)
+  }
+  @Pushable()
+  deleteFixture(id: string) {
+    this.fixtures.delete(id)
+  }
+  getFixtures(): NSFixture[] {
+    return Array.from(this.fixtures.values())
+  }
+  getFixture(id: string): NSFixture | undefined {
+    return this.fixtures.get(id)
+  }
+
+  // Items
   private items = new Map<string, NSItem>()
   @Pushable()
   createItem(id: string, kind: string, options: any) {
@@ -75,6 +105,14 @@ export class NetworkState extends State {
   getItem(id: string): NSItem | undefined {
     return this.items.get(id)
   }
+}
+
+export interface NSFixture {
+  id: string
+  kind: string
+  position: Vec2
+  rotation: number
+  scale: number
 }
 
 export interface NSEntity {

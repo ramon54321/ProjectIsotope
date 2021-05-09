@@ -3,14 +3,11 @@ import { Input } from './input'
 import * as PIXI from 'pixi.js'
 import { Gtx } from './graphics'
 import { createLine } from './drawing/line'
-import gen from 'random-seed'
-
-const R = gen.create('12345')
 
 export class Camera {
   private readonly gtx: Gtx
   private readonly input: Input
-  private readonly container: PIXI.Container
+  private readonly containers: PIXI.Container[]
   private readonly width: number
   private readonly height: number
   private readonly originVertical: PIXI.Graphics
@@ -36,21 +33,8 @@ export class Camera {
     setAlpha()
 
     // World Container
-    this.container = this.gtx.renderLayers.getRenderLayer('Entities')
+    this.containers = [this.gtx.renderLayers.getRenderLayer('Entities'), this.gtx.renderLayers.getRenderLayer('Fixtures')]
     this.gtx.app.ticker.add(delta => this.tick(delta))
-
-    // Generate World TODO: Move out of camera
-    for (let i = 0; i < 125; i++) {
-      const position = new Vec2(R.random() * 10000 - 5000, R.random() * 10000 - 5000)
-      const sprite = new PIXI.Sprite(
-        this.gtx.app.loader.resources[`res/blob.png`].texture
-      )
-      sprite.anchor.set(0.5, 0.5)
-      sprite.scale.set(32, 32)
-      sprite.tint = R.random() > 0.5 ? 0xf0d269 : 0xc9b779
-      sprite.position.set(position.x, position.y)
-      this.container.addChild(sprite)
-    }
   }
   getWidth(): number {
     return this.width
@@ -70,12 +54,6 @@ export class Camera {
   }
   getPosition(): Vec2 {
     return new Vec2(this.x, this.y)
-  }
-  addSprite(sprite: PIXI.Sprite) {
-    this.container.addChild(sprite)
-  }
-  removeSprite(sprite: PIXI.Sprite) {
-    this.container.removeChild(sprite)
   }
   private x: number = 0
   private y: number = 0
@@ -116,10 +94,9 @@ export class Camera {
     if (!addingVelocityY) this.yv /= this.vDeceleration
     this.x += this.xv
     this.y += this.yv
-    this.container.position.set(
-      -this.x + this.gtx.app.renderer.width / (this.gtx.app.renderer.resolution * 2),
-      -this.y + this.gtx.app.renderer.height / (this.gtx.app.renderer.resolution * 2),
-    )
+    const containerX = -this.x + this.gtx.app.renderer.width / (this.gtx.app.renderer.resolution * 2)
+    const containerY = -this.y + this.gtx.app.renderer.height / (this.gtx.app.renderer.resolution * 2)
+    this.containers.forEach(container => container.position.set(containerX, containerY))
     this.originVertical.position.x = -this.x + this.width / 2
     this.originHorizontal.position.y = -this.y + this.height / 2
   }

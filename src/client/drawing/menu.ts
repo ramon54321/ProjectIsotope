@@ -13,7 +13,7 @@ const BACKGROUND_ALPHA_HOVER = 0.95
 const ITEM_HEIGHT = 20
 const PADDING_LEFT = 10
 
-export function addMenu(app: PIXI.Application, items: MenuItem[], x: number, y: number, itemClickCallback: (item: MenuItem) => void, afterClickCallback?: () => void) {
+export function addMenu(items: MenuItem[], x: number, y: number, itemClickCallback: (item: MenuItem) => void, afterClickCallback?: () => void) {
   const menu = new PIXI.Container()
   menu.position.x = x
   menu.position.y = y
@@ -40,6 +40,5 @@ export function addMenu(app: PIXI.Application, items: MenuItem[], x: number, y: 
     rect.addChild(message)
     menu.addChild(rect)
   })
-  app.stage.addChild(menu)
   return menu
 }

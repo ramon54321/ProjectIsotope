@@ -1,34 +1,14 @@
-import * as PIXI from 'pixi.js'
 import { Vec2 } from '../shared/engine/math'
 import { Camera } from './camera'
 import { Gtx } from './graphics'
 import { SpriteLibrary } from './sprite-library'
+import { SpriteManager } from './sprite-manager'
 import { PawnSprite } from './sprite-utils'
 
-export class EntityManager {
-  private readonly gtx: Gtx
-  private readonly camera: Camera
-  private readonly chunkWidth = 100
-  private readonly chunkHeight = 100
-  private readonly chunkVisibleRangeX
-  private readonly chunkVisibleRangeY
+export class EntityManager extends SpriteManager<PawnSprite> {
   constructor(gtx: Gtx, camera: Camera) {
-    this.gtx = gtx
-    this.camera = camera
-
-    this.chunkVisibleRangeX = Math.ceil((this.camera.getWidth() / this.chunkWidth) / 2) + 1
-    this.chunkVisibleRangeY = Math.ceil((this.camera.getHeight() / this.chunkHeight) / 2) + 1
-
-    this.gtx.app.ticker.add(delta => {
-      const deltaTimeSeconds = delta / PIXI.settings.TARGET_FPMS! / 1000
-      this.render(deltaTimeSeconds)
-    })
-    setInterval(() => this.slowTick(), 200)
+    super(gtx, camera, 'Entities')
   }
-  private positionToChunk(position: Vec2): Vec2 {
-    return new Vec2(Math.floor(position.x / this.chunkWidth), Math.floor(position.y / this.chunkHeight))
-  }
-  private readonly sprites = new Map<string, PawnSprite>()
   private readonly entityIdCreationQueue: string[] = []
   start() {
     this.gtx.events.on('state-fullState', () => this.reload())
@@ -51,23 +31,6 @@ export class EntityManager {
       sprite.velocity = sprite.lastPosition.differenceTo(position)
     })
   }
-  private slowTick() {
-    const cameraPosition = this.camera.getPosition()
-    const cameraChunk = this.positionToChunk(cameraPosition)
-    this.sprites.forEach(sprite => {
-      const spriteChunk = this.positionToChunk(sprite.position as any)
-      if (
-        spriteChunk.x <= cameraChunk.x + this.chunkVisibleRangeX &&
-        spriteChunk.x >= cameraChunk.x - this.chunkVisibleRangeX &&
-        spriteChunk.y <= cameraChunk.y + this.chunkVisibleRangeY &&
-        spriteChunk.y >= cameraChunk.y - this.chunkVisibleRangeY
-      ) {
-        sprite.visible = true
-      } else {
-        sprite.visible = false
-      }
-    })
-  }
   private reload() {
     this.sprites.forEach((sprite, id) => this.destroyEntity(id))
     this.gtx.networkState.getEntities().forEach(entity => this.createEntity(entity.id))
@@ -76,13 +39,13 @@ export class EntityManager {
     const entity = this.gtx.networkState.getEntity(id)
     if (entity === undefined) return
     const sprite = SpriteLibrary.getPawnSprite(this.gtx, entity)
-    this.camera.addSprite(sprite)
+    this.addSprite(sprite)
     this.sprites.set(id, sprite)
   }
   private destroyEntity(id: string) {
     const sprite = this.sprites.get(id)
     if (sprite === undefined) return
-    this.camera.removeSprite(sprite)
+    this.removeSprite(sprite)
     this.sprites.delete(id)
     sprite.destroy()
   }
@@ -93,9 +56,14 @@ export class EntityManager {
     this.gtx.networkState.getEntities().forEach(entity => {
       const sprite = this.sprites.get(entity.id)
       if (sprite === undefined) throw new Error('Graphics can not be removed... this should not be possible')
+
+      // Position
       const movement = sprite.velocity.scale(tickInterpolation)
       const position = new Vec2(sprite.lastPosition.x + movement.x, sprite.lastPosition.y + movement.y)
       sprite.position.set(position.x, position.y)
+
+      // Sorting
+      sprite.zIndex = sprite.position.y
     })
   }
 }

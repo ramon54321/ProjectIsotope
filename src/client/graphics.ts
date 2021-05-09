@@ -13,6 +13,8 @@ import { ClientState } from './client-state'
 import { UserInterface } from './user-interface'
 import { EntityManager } from './entity-manager'
 import { RenderLayers } from './render-layers'
+import { FixtureManager } from './fixture-manager'
+import Stats from 'stats.js'
 
 export interface Gtx {
   renderLayers: RenderLayers
@@ -27,9 +29,11 @@ export interface Gtx {
 }
 
 export class Graphics {
-  private readonly renderLayers = new RenderLayers()
   private readonly tickTimer = new Timer()
-
+  
+  private readonly stats: Stats
+  
+  private readonly renderLayers: RenderLayers
   private readonly clientState: ClientState
   private readonly selection: Selection
   private readonly networkState: NetworkState
@@ -42,6 +46,7 @@ export class Graphics {
   private input!: Input
   private camera!: Camera
   private entityManager!: EntityManager
+  private fixtureManager!: FixtureManager
   private interaction!: Interaction
   private menu!: Menu
   private userInterface!: UserInterface
@@ -54,6 +59,7 @@ export class Graphics {
 
     // Pixi
     PIXI.utils.skipHello()
+    PIXI.settings.SORTABLE_CHILDREN = true
     this.app = new PIXI.Application({
       autoDensity: true,
       resolution: 2,
@@ -65,6 +71,7 @@ export class Graphics {
     this.app.loader.add(['res/biped1.json', 'res/biped2.json', 'res/blob.png']).load(() => this.start())
 
     // Render Layers
+    this.renderLayers = new RenderLayers()
     this.renderLayers.setup(this.app)
 
     // Self Init Structures
@@ -83,23 +90,42 @@ export class Graphics {
       events: this.events,
       gameOptions: this.gameOptions,
     }
+
+    // Stats
+    this.stats = new Stats()
+    this.stats.showPanel(0)
+    this.stats.dom.style.marginLeft = '20px'
+    this.stats.dom.style.marginTop = '20px'
+    const setStatsVisible = () => {
+      this.stats.dom.style.display = this.gameOptions.getIsDevMode() ? 'block' : 'none'
+    }
+    setStatsVisible()
+    this.gtx.gameOptions.getEventEmitter().on('isDevMode', setStatsVisible)
+    document.body.appendChild(this.stats.dom)
   }
 
   start() {
+    // Before Tick
+    this.app.ticker.add(() => this.stats.begin())
+    this.app.ticker.add(() => this.events.emit('render'))
+
     // Setup Systems
     this.input = new Input()
     this.camera = new Camera(this.gtx, this.input)
     this.entityManager = new EntityManager(this.gtx, this.camera)
     this.entityManager.start()
+    this.fixtureManager = new FixtureManager(this.gtx, this.camera)
+    this.fixtureManager.start()
     this.interaction = new Interaction(this.gtx)
     this.menu = new Menu(this.gtx, this.interaction, this.camera, this.input)
-    this.userInterface = new UserInterface(this.gtx)
+    this.userInterface = new UserInterface(this.gtx, this.entityManager, this.fixtureManager)
 
     // Setup Input Tick
     this.gtx.app.ticker.add(delta => this.tickInput(delta))
 
     // After Tick
     this.app.ticker.add(() => this.input.reset())
+    this.app.ticker.add(() => this.stats.end())
   }
 
   beforeTick() {

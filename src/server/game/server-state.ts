@@ -1,6 +1,6 @@
 import { Vec2 } from '../../shared/engine/math'
 import { NetworkState } from '../../shared/game/network-state'
-import { EntityTag, ItemTag } from '../../shared/game/stats'
+import { EntityTag, FixturesTag, ItemTag } from '../../shared/game/stats'
 import { ECS as ECSECS, Entity as ECSEntity } from '../engine/ecs'
 import { IdManager } from '../engine/id-manager'
 import { components, Components, ComponentTags } from './components'
@@ -59,5 +59,12 @@ export class ServerState {
     const entity = this.ecs.getEntityById(entityId)
     if (!entity) return
     entity.getComponent('Factory')?.submitOrder(kind)
+  }
+  createFixture(kind: FixturesTag, position: Vec2, rotation: number = 0, scale: number = 1) {
+    const id = IdManager.generateId()
+    this.networkState.createFixture(id, kind, position, rotation, scale)
+  }
+  deleteFixture(id: string) {
+    this.networkState.deleteFixture(id)
   }
 }

@@ -4,6 +4,7 @@ import { Vec2 } from '../shared/engine/math'
 import { NSEntity } from '../shared/game/network-state'
 import { Stats } from '../shared/game/stats'
 import { createText } from './drawing/text'
+import { SpriteManager } from './sprite-manager'
 
 type DisplayListItem = {
   name?: string
@@ -12,11 +13,15 @@ type DisplayListItem = {
 
 export class UserInterface {
   private readonly gtx: Gtx
+  private readonly entityManager: SpriteManager<any>
+  private readonly fixtureManager: SpriteManager<any>
   private readonly width: number
   private readonly height: number
   private readonly container: PIXI.Container
-  constructor(gtx: Gtx) {
+  constructor(gtx: Gtx, entityManager: SpriteManager<any>, fixtureManager: SpriteManager<any>) {
     this.gtx = gtx
+    this.entityManager = entityManager
+    this.fixtureManager = fixtureManager
     this.width = this.gtx.app.renderer.width / this.gtx.app.renderer.resolution
     this.height = this.gtx.app.renderer.height / this.gtx.app.renderer.resolution
 
@@ -39,13 +44,14 @@ export class UserInterface {
     })
     const setText = () => {
       details.text = this.getClientDetails()
+      if (this.gtx.gameOptions.getIsDevMode()) {
+        details.position.y = y + 60
+      } else {
+        details.position.y = y
+      }
     }
     setText()
-    this.gtx.selection.getEventEmitter().on('entity', setText)
-    this.gtx.networkState.getEventEmitter().on('setServerTickRate', setText)
-    this.gtx.networkState.getEventEmitter().on('setWorldName', setText)
-    this.gtx.clientState.getEventEmitter().on('team', setText)
-    this.gtx.gameOptions.getEventEmitter().on('isDevMode', setText)
+    this.gtx.events.on('render', setText)
     this.gtx.events.on('state', setText)
     this.container.addChild(details)
   }
@@ -123,13 +129,18 @@ export class UserInterface {
       .join('\n')
   }
   private getClientDetails(): string {
+    const entities = `Entities: ${this.entityManager.getActiveCount()}/${this.entityManager.getTotalCount()}`
+    const fixtures = `Fixtures: ${this.fixtureManager.getActiveCount()}/${this.fixtureManager.getTotalCount()}`
     const selectedEntity = this.gtx.selection.getSelectedEntity()
     const tickRate = `Tick Rate: ${this.gtx.networkState.getServerTickRate()}`
     const selectedEntityId = selectedEntity ? `Selected Entity ID: ${selectedEntity.id}` : undefined
     const team = `Team: ${this.gtx.networkState.getTeams()[this.gtx.clientState.getTeam()]}`
+    const isDevMode = this.gtx.gameOptions.getIsDevMode()
     const list = [
-      this.gtx.gameOptions.getIsDevMode() ? tickRate : undefined,
-      this.gtx.gameOptions.getIsDevMode() ? selectedEntityId : undefined,
+      isDevMode ? entities : undefined,
+      isDevMode ? fixtures : undefined,
+      isDevMode ? tickRate : undefined,
+      isDevMode ? selectedEntityId : undefined,
       team,
     ]
     return list.filter(item => item !== undefined).join('\n')

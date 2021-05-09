@@ -29,14 +29,14 @@ export const Stats = {
       keneticEnergy: 0,
     },
   },
-  Abilities: {
-    Movement: {
-
-    }
-  },
   Instants: {
     ATTACK_BULLET_LIGHT: {
       durationSeconds: 1
+    }
+  },
+  Fixtures: {
+    PATCH_L_0: {
+      
     }
   }
 }
@@ -44,5 +44,5 @@ export const Stats = {
 export type EntityTag = keyof typeof Stats.Entities
 export type ItemTag = keyof typeof Stats.Items
 export type BasicTag = keyof typeof Stats.Basic
-export type AbilityTag = keyof typeof Stats.Abilities
 export type InstantsTag = keyof typeof Stats.Instants
+export type FixturesTag = keyof typeof Stats.Fixtures

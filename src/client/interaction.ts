@@ -11,7 +11,7 @@ export type MenuItem = {
 
 export class Interaction {
   private readonly gtx: Gtx
-  private container: PIXI.Container | undefined
+  private menuContainer: PIXI.Container | undefined
   private readonly events = new EventEmitter()
   constructor(gtx: Gtx) {
     this.gtx = gtx
@@ -21,27 +21,26 @@ export class Interaction {
     return this.events
   }
   close() {
-    if (!this.container) return
-    this.gtx.app.stage.removeChild(this.container)
-    this.container = undefined
+    if (!this.menuContainer) return
+    this.gtx.renderLayers.removeSprite(this.menuContainer, 'UI')
+    this.menuContainer = undefined
   }
   push(uiState: UIState, items: MenuItem[]) {
-    if (this.container) this.close()
+    if (this.menuContainer) this.close()
     setTimeout(() => this.spawn(uiState, items), 10)
   }
   toggle(uiState: UIState, items: MenuItem[]) {
-    if (this.container) return this.close()
+    if (this.menuContainer) return this.close()
     this.spawn(uiState, items)
   }
   private spawn(uiState: UIState, items: MenuItem[]) {
-    this.container = addMenu(
-      // TODO: Move menu to renderlayer
-      this.gtx.app,
+    this.menuContainer = addMenu(
       items,
       uiState.mouseScreenPosition.x,
       uiState.mouseScreenPosition.y,
       item => item.action(uiState),
       () => this.close(),
     )
+    this.gtx.renderLayers.addSprite(this.menuContainer, 'UI')
   }
 }
