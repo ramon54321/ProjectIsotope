@@ -1,12 +1,33 @@
+import * as PIXI from 'pixi.js'
 import { Vec2 } from '../shared/engine/math'
 import { Camera } from './camera'
-import { Gtx } from './graphics'
+import { ActiveTotal, Gtx } from './graphics'
+import { QuadTree, AABB } from './quadtree'
 import { SpriteLibrary } from './sprite-library'
-import { SpriteManager } from './sprite-manager'
 
-export class FixtureManager extends SpriteManager<any> {
+export class FixtureManager implements ActiveTotal {
+  private readonly gtx: Gtx
+  private readonly camera: Camera
   constructor(gtx: Gtx, camera: Camera) {
-    super(gtx, camera, 'Fixtures', 2, 2, 400, 400)
+    this.gtx = gtx
+    this.camera = camera
+    setInterval(() => this.slowTick(), 200)
+  }
+  getActiveCount(): number {
+    return this.lastSet.length
+  }
+  getTotalCount(): number {
+    return this.quadTree.count()
+  }
+  private lastSet: [string, PIXI.Sprite][] = []
+  private readonly quadTree = new QuadTree<PIXI.Sprite>(new AABB(0, 0, 5000))
+  private slowTick() {
+    const cameraPosition = this.camera.getPosition()
+    const cameraArea = new AABB(cameraPosition.x, cameraPosition.y, this.gtx.app.renderer.width)
+    this.lastSet.forEach(([id, sprite]) => (sprite.visible = false))
+    const sprites = this.quadTree.query(cameraArea)
+    sprites.forEach(([id, sprite]) => (sprite.visible = true))
+    this.lastSet = sprites
   }
   start() {
     this.gtx.events.on('state-fullState', () => this.reload())
@@ -18,22 +39,23 @@ export class FixtureManager extends SpriteManager<any> {
     this.reload()
   }
   private reload() {
-    this.sprites.forEach((sprite, id) => this.destroyFixture(id))
+    this.quadTree.query(this.quadTree.boundary).forEach(([id, sprite]) => this.destroyFixture(id, sprite))
     this.gtx.networkState.getFixtures().forEach(fixture => this.createFixture(fixture.id))
   }
   private createFixture(id: string) {
     const fixture = this.gtx.networkState.getFixture(id)
     if (fixture === undefined) return
     const sprite = SpriteLibrary.getFixtureSprite(this.gtx, fixture)
-    this.addSprite(sprite)
-    this.sprites.set(id, sprite)
+    this.gtx.renderLayers.addSprite(sprite, 'Fixtures')
+    this.quadTree.add(fixture.position, id, sprite)
+    sprite.visible = false
   }
-  private destroyFixture(id: string) {
-    const sprite = this.sprites.get(id)
-    if (sprite === undefined) return
-    this.removeSprite(sprite)
-    this.sprites.delete(id)
-    sprite.destroy()
+  private destroyFixture(id: string, sprite?: PIXI.Sprite) {
+    const _sprite = sprite ? sprite : this.quadTree.get(id)
+    if (_sprite === undefined) return
+    this.gtx.renderLayers.removeSprite(_sprite, 'Fixtures')
+    this.quadTree.remove(id)
+    _sprite.destroy()
   }
   protected render(deltaTimeSeconds: number) {}
 }

@@ -1,10 +1,9 @@
 import * as PIXI from 'pixi.js'
-import { Gtx } from './graphics'
+import { ActiveTotal, Gtx } from './graphics'
 import { Vec2 } from '../shared/engine/math'
 import { NSEntity } from '../shared/game/network-state'
 import { Stats } from '../shared/game/stats'
 import { createText } from './drawing/text'
-import { SpriteManager } from './sprite-manager'
 
 type DisplayListItem = {
   name?: string
@@ -13,12 +12,12 @@ type DisplayListItem = {
 
 export class UserInterface {
   private readonly gtx: Gtx
-  private readonly entityManager: SpriteManager<any>
-  private readonly fixtureManager: SpriteManager<any>
+  private readonly entityManager: ActiveTotal
+  private readonly fixtureManager: ActiveTotal
   private readonly width: number
   private readonly height: number
   private readonly container: PIXI.Container
-  constructor(gtx: Gtx, entityManager: SpriteManager<any>, fixtureManager: SpriteManager<any>) {
+  constructor(gtx: Gtx, entityManager: ActiveTotal, fixtureManager: ActiveTotal) {
     this.gtx = gtx
     this.entityManager = entityManager
     this.fixtureManager = fixtureManager

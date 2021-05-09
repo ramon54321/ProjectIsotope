@@ -16,6 +16,11 @@ import { RenderLayers } from './render-layers'
 import { FixtureManager } from './fixture-manager'
 import Stats from 'stats.js'
 
+export interface ActiveTotal {
+  getActiveCount(): number
+  getTotalCount(): number
+}
+
 export interface Gtx {
   renderLayers: RenderLayers
   tickTimer: Timer
@@ -120,7 +125,7 @@ export class Graphics {
     this.fixtureManager.start()
     this.interaction = new Interaction(this.gtx)
     this.menu = new Menu(this.gtx, this.interaction, this.camera, this.input)
-    this.userInterface = new UserInterface(this.gtx, this.entityManager, this.fixtureManager)
+    this.userInterface = new UserInterface(this.gtx, this.entityManager, this.fixtureManager as any)
 
     // Setup Input Tick
     this.gtx.app.ticker.add(delta => this.tickInput(delta))
