@@ -1,0 +1,31 @@
+{"frames": {
+
+"PATCH_L_A_0.png":
+{
+	"frame": {"x":1,"y":1,"w":128,"h":128},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":128,"h":128},
+	"sourceSize": {"w":128,"h":128}
+},
+"PATCH_L_A_1.png":
+{
+	"frame": {"x":1,"y":131,"w":122,"h":128},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":6,"y":0,"w":122,"h":128},
+	"sourceSize": {"w":128,"h":128}
+}},
+"animations": {
+	"PATCH_L_A": ["PATCH_L_A_0.png","PATCH_L_A_1.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "PATCH_L_A.png",
+	"format": "RGBA8888",
+	"size": {"w":130,"h":254},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:6ef687919b755a75dff7529abe836c49:7ff58c0c71ad5e79a1cb11625bd5b5c6:c7378acd8d24a5cd73a2d14bc027fb1f$"
+}
+}

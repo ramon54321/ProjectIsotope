@@ -3,7 +3,7 @@ dist
 tsconfig.tsbuildinfo
 .DS_Store
 README.pdf
-res
+res/**/*.psd
 out
 client-game-options.json
 *.0x
