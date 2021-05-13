@@ -14,7 +14,6 @@ setInterval(() => {
   console.log(`Heap: ${used.toFixed(1)}/${total.toFixed(1)} MB`)
 }, 5000)
 
-const TICK_RATE = 5
 const TICKS_PER_SLOW_TICK = 5
 
 const network = new NetServer(8081)
@@ -29,20 +28,15 @@ network.on('action', payload => {
   gameLogic.pushAction(payload)
 })
 
-networkState.setServerTickRate(TICK_RATE)
-networkState.setTeams(['Blue', 'Red', 'Yellow'])
+// spawnWorld()
+// function spawnWorld() {
+//   for (let i = 0; i < 100; i++) {
+//     const position = new Vec2(R.random() * 10000 - 5000, R.random() * 10000 - 5000)
+//     serverState.createFixture('PATCH_L_0', position, R.random() * 2 * Math.PI, (0.75 + R.random() / 2) * 32)
+//   }
+// }
+serverState.start()
 
-spawnWorld()
-function spawnWorld() {
-  for (let i = 0; i < 100; i++) {
-    const position = new Vec2(R.random() * 10000 - 5000, R.random() * 10000 - 5000)
-    serverState.createFixture('PATCH_L_0', position, R.random() * 2 * Math.PI, (0.75 + R.random() / 2) * 32)
-  }
-  for (let i = 0; i < 100000; i++) {
-    const position = new Vec2(R.random() * 10000 - 5000, R.random() * 10000 - 5000)
-    serverState.createFixture('GRASS_S_0', position, 0, 0.75 + R.random() / 2)
-  }
-}
 
 setInterval(tick, 1000 / networkState.getServerTickRate())
 

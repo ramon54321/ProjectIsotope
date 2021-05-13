@@ -6,14 +6,18 @@ import { IdManager } from '../engine/id-manager'
 import { components, Components, ComponentTags } from './components'
 import { Library } from './library'
 import { Combat, Factories, Movement, Reaction } from './systems'
+import { World } from './world'
 
 export type Entity = ECSEntity<ComponentTags, Components>
 export type ECS = ECSECS<ComponentTags, Components>
+
+const TICK_RATE = 5
 
 export class ServerState {
   private readonly networkState: NetworkState
   private readonly ecs: ECS
   readonly sendClassBInstant: (payload: any) => void
+  private readonly world: World
   constructor(networkState: NetworkState, sendClassBInstant: (payload: any) => void) {
     this.networkState = networkState
     this.sendClassBInstant = sendClassBInstant
@@ -22,6 +26,12 @@ export class ServerState {
       .addSystem(Reaction)
       .addSystem(Combat)
       .addSystem(Factories)
+    this.world = new World(this, networkState)
+  }
+  start() {
+    this.networkState.setServerTickRate(TICK_RATE)
+    this.networkState.setTeams(['Blue', 'Red', 'Yellow'])
+    this.world.generate()
   }
   tickEcs() {
     this.ecs.tick()

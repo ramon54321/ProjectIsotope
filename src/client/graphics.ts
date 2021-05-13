@@ -14,6 +14,7 @@ import { UserInterface } from './user-interface'
 import { EntityManager } from './entity-manager'
 import { RenderLayers } from './render-layers'
 import { FixtureManager } from './fixture-manager'
+import { WindBatchRenderer } from './wind-batch-renderer'
 import Stats from 'stats.js'
 
 export interface ActiveTotal {
@@ -64,6 +65,7 @@ export class Graphics {
 
     // Pixi
     PIXI.utils.skipHello()
+    PIXI.Renderer.registerPlugin('batch-wind', WindBatchRenderer)
     PIXI.settings.SORTABLE_CHILDREN = true
     this.app = new PIXI.Application({
       autoDensity: true,
@@ -74,7 +76,13 @@ export class Graphics {
     })
     document.body.appendChild(this.app.view)
     this.app.loader
-      .add(['res/BIPED_A/BIPED_A.json', 'res/PATCH_L_A/PATCH_L_A.json', 'res/GRASS_S_A/GRASS_S_A.json'])
+      .add([
+        'res/BIPED_A/BIPED_A.json',
+        'res/PATCH_L_A/PATCH_L_A.json',
+        'res/GRASS_S_A/GRASS_S_A.json',
+        'res/shaders/wind.vert',
+        'res/shaders/wind.frag',
+      ])
       .load(() => this.start())
 
     // Render Layers
@@ -114,6 +122,7 @@ export class Graphics {
   start() {
     // Before Tick
     this.app.ticker.add(() => this.stats.begin())
+    this.app.ticker.add(() => this.app.renderer.plugins['batch-wind']?.update())
     this.app.ticker.add(() => this.events.emit('render'))
 
     // Setup Systems
@@ -159,6 +168,11 @@ export class Graphics {
   private tickInput(delta: number) {
     if (this.input.getInputOnce('p')) {
       this.gameOptions.toggleDevMode()
+    }
+    if (this.gameOptions.getIsDevMode() && this.input.getInputOnce('i')) {
+      const spector = new (require('spectorjs').Spector)()
+      spector.displayUI()
+      spector.captureCanvas(this.app.view)
     }
     if (this.input.getInputOnce('o')) {
       this.gameOptions.toggleZoomedOut()

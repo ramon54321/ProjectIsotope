@@ -12,17 +12,24 @@ export class SpriteLibrary {
   static getFixtureSprite(gtx: Gtx, fixture: NSFixture): PIXI.Sprite {
     if (fixture.kind === 'PATCH_L_0') {
       const sprite = SpriteUtils.createSprite(gtx.app, 'PATCH_L_A', undefined, { scale: new Vec2(0.5 * fixture.scale, 0.5 * fixture.scale) })
-      sprite.tint = R.random() > 0.5 ? 0xf0d269 : 0xc9b779
+      sprite.tint = R.random() > 0.5 ? 0xece1cd : 0xc3b995
+      sprite.alpha = 0.2
       sprite.position.set(fixture.position.x, fixture.position.y)
       sprite.rotation = fixture.rotation
       sprite.interactive = false
       return sprite
     } else {
       const sprite = SpriteUtils.createSprite(gtx.app, 'GRASS_S_A', undefined, { scale: new Vec2(0.5 * fixture.scale, 0.5 * fixture.scale) })
-      sprite.tint = R.random() > 0.5 ? 0xEEB977 : 0xFFDFB2
+      const colors = [
+        0xecc491,
+        0xdcc09d,
+        0xFFDFB2,
+      ]
+      sprite.tint = colors[R.range(colors.length)]
       sprite.position.set(fixture.position.x, fixture.position.y)
       sprite.rotation = fixture.rotation
       sprite.interactive = false
+      sprite.pluginName = 'batch-wind'
       return sprite
     }
   }
@@ -34,6 +41,7 @@ export class SpriteLibrary {
     const body = SpriteUtils.createSprite(gtx.app, 'BIPED_A', 'BIPED_A_BODY', { scale: new Vec2(0.5, 0.5) }) as PawnSprite
     const head = SpriteUtils.createSprite(gtx.app, 'BIPED_A', 'BIPED_A_HEAD')
     body.addChild(head)
+    body.blendMode = PIXI.BLEND_MODES.ADD
     head.position.set(-16, -32)
     gtx.app.stage.addChild(body)
 
